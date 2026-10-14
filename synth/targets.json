@@ -1,0 +1,8 @@
+{
+  "description": "FreePDK45 targets for Chen TCAS-I 2015 SIM building blocks",
+  "targets": [
+    {"top": "sc_signed_mul", "files": ["hdl/sc_signed_mul.v"]},
+    {"top": "sc_sat_add", "files": ["hdl/sc_sat_add.v"]},
+    {"top": "tdg_accum_k5", "files": ["hdl/tdg_accum.v", "hdl/tdg_accum_k5.v"]}
+  ]
+}
