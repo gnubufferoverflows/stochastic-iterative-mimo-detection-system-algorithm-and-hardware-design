@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+*.vvp
+sim/stim_*.hex
+sim/tb_counts.txt
+sim/gold_*.hex
+synth/out/
+*.log
+.DS_Store
