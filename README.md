@@ -36,7 +36,7 @@ An independent reproduction, mathematical derivation, circuit architecture walkt
 - [Paper-to-Code Traceability Matrix](#paper-to-code-traceability-matrix)
 - [Repository Structure](#repository-structure)
 - [Section II: System Model & Background (with Four-Element Pedagogy)](#section-ii-system-model--background-with-four-element-pedagogy)
-  - [1. Spatial-Multiplexing MIMO Channel Model (Eq. 1)](#1-spatial-multiplexing-mimo-channel-model-eq-1)
+  - [1. Spatial-Multiplexing MIMO Channel Model (Eqs. 1, 1b)](#1-spatial-multiplexing-mimo-channel-model-eqs-1-1b)
   - [2. Soft Bit Log-Likelihood Ratio (LLR) Definition (Eq. 2)](#2-soft-bit-log-likelihood-ratio-llr-definition-eq-2)
   - [3. Full MAP Exponential Marginalization (Eq. 3)](#3-full-map-exponential-marginalization-eq-3)
   - [4. Bit-Flop MCMC Gibbs Sampling Transition (Eq. 4)](#4-bit-flop-mcmc-gibbs-sampling-transition-eq-4)
@@ -156,7 +156,7 @@ python3 tools/freepdk45/run_synth.py --project projects/stochastic-iterative-mim
 
 | Paper Section & Topic | Landmark Equation / Concept | Python Algorithmic Model | Synthesizable Verilog RTL | Verification & Testbench | Microarchitectural Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Sec. II-A: Channel Model** | $\boxed{\mathbf{y} = \mathbf{Hs} + \mathbf{n}}$ (Eq. 1) | [`generate_channel`, `complex_to_real_mimo`](src/mimo_channel.py#L11-L40) | Handled in testbench / system top | [`sim/run_tests.py`](sim/run_tests.py#L80-L95) | $4 \times 4$ Rayleigh flat-fading; real equivalent $8 \times 8$ real matrix. |
+| **Sec. II-A: Channel Model** | $\boxed{\mathbf{y} = \mathbf{Hs} + \mathbf{n}}$ (Eq. 1) / $\boxed{\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}}$ (Eq. 1b) | [`generate_channel`, `complex_to_real_mimo`](src/mimo_channel.py#L11-L40) | Handled in testbench / system top | [`sim/run_tests.py`](sim/run_tests.py#L80-L95) | $4 \times 4$ Rayleigh flat-fading; real equivalent $8 \times 8$ real matrix. |
 | **Sec. II-A: Soft LLR** | $\boxed{\lambda(x_{k,b}) = \ln \frac{P(x_{k,b}=+1)}{P(x_{k,b}=-1)}}$ (Eq. 2) | [`maxlog_llr_qam`](src/sim_mimo.py#L50-L115) | [`llr_calculator.v`](hdl/llr_calculator.v#L35-L45) | [`sim/run_tests.py`](sim/run_tests.py) | Max-log approximation evaluated via stochastic norm streams. |
 | **Sec. II-A: Direct MAP** | $2^{N_t M - 1}$ sum (Eq. 3) | [`maxlog_llr_qam`](src/sim_mimo.py) | Exponential cost avoided by SIM | Analysis reference | Direct evaluation prohibitive for high-order constellations. |
 | **Sec. II-A: Gibbs Sampling** | $\boxed{P(x_{k,b}=+1) = \frac{1}{1+e^{-\lambda}}}$ (Eq. 4) | [`sim_mimo_detect`](src/sim_mimo.py#L145-L160) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v#L125-L135) | [`hdl/tb_sim.v`](hdl/tb_sim.v) | Bernoulli trial updates single bit conditioning on current state. |
@@ -234,7 +234,7 @@ projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-desig
 
 ## Section II: System Model & Background (with Four-Element Pedagogy)
 
-### 1. Spatial-Multiplexing MIMO Channel Model (Eq. 1)
+### 1. Spatial-Multiplexing MIMO Channel Model (Eqs. 1, 1b)
 
 In a spatial-multiplexing MIMO wireless transmission system with $N_t$ transmit antennas and $N_r$ receive antennas ($N_r \ge N_t$), the baseband complex received vector $\mathbf{y} \in \mathbb{C}^{N_r}$ is modeled as:
 
@@ -249,18 +249,33 @@ For hardware realization without complex multipliers, the system is decomposed i
 
 $$
 \boxed{
+\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}
+}
+\tag{1b}
+$$
+
+where the constituent $2N_r \times 1$ vectors and $2N_r \times 2N_t$ channel matrix are defined as:
+
+$$
+\mathbf{y}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix}, \quad
+\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix}, \quad
+\mathbf{s}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{s}) \\ \mathrm{Im}(\mathbf{s}) \end{bmatrix}, \quad
+\mathbf{n}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{n}) \\ \mathrm{Im}(\mathbf{n}) \end{bmatrix}
+$$
+
+Expanding the matrix-vector multiplication yields:
+
+$$
 \begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix}
 =
 \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix}
 \begin{bmatrix} \mathrm{Re}(\mathbf{s}) \\ \mathrm{Im}(\mathbf{s}) \end{bmatrix}
 +
 \begin{bmatrix} \mathrm{Re}(\mathbf{n}) \\ \mathrm{Im}(\mathbf{n}) \end{bmatrix}
-}
-\tag{1-Real}
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Spatial multiplexing transmits independent data streams simultaneously across $N_t$ antennas over the same frequency band. Multipath propagation mixes these streams at $N_r$ receive antennas, corrupted by AWGN. In hardware, complex multipliers consume $3\times$ to $4\times$ more area than real multipliers. Converting Eq. (1) into Eq. (1-Real) doubles the vector length from 4 to 8, allowing the detector datapath to operate entirely on real-valued signed fixed-point numbers.
+- **Plain English & Microarchitectural Role:** Spatial multiplexing transmits independent data streams simultaneously across $N_t$ antennas over the same frequency band. Multipath propagation mixes these streams at $N_r$ receive antennas, corrupted by AWGN. In hardware, complex multipliers consume $3\times$ to $4\times$ more area than real multipliers. Converting Eq. (1) into Eq. (1b) doubles the vector length from 4 to 8, allowing the detector datapath to operate entirely on real-valued signed fixed-point numbers.
 - **Symbol Dictionary:**
   - $\mathbf{y} \in \mathbb{C}^{N_r}$: Baseband complex received signal vector ($N_r=4$ antennas).
   - $\mathbf{H} \in \mathbb{C}^{N_r \times N_t}$: Flat-fading Rayleigh channel matrix where $H_{i,j} \sim \mathcal{CN}(0, 1) = \frac{1}{\sqrt{2}}(\mathcal{N}(0, 1) + j \mathcal{N}(0, 1))$.
@@ -272,8 +287,17 @@ $$
   Consider a $1 \times 1$ sub-channel with $s = \frac{1}{\sqrt{2}}(1 + j)$, $H = 0.6 - 0.8j$, and noise $n = 0.05 + 0.02j$:
   $$\mathbf{H}\mathbf{s} = (0.6 - 0.8j)\frac{1+j}{\sqrt{2}} = \frac{(0.6+0.8) + j(0.6-0.8)}{\sqrt{2}} = \frac{1.4 - 0.2j}{\sqrt{2}} \approx 0.9899 - 0.1414j$$
   $$\mathbf{y} = 0.9899 - 0.1414j + (0.05 + 0.02j) = 1.0399 - 0.1214j$$
-  Using the real-equivalent decomposition Eq. (1-Real):
-  $$\begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix} = \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix} = \begin{bmatrix} 0.4243 + 0.5657 + 0.05 \\ -0.5657 + 0.4243 + 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\ -0.1214 \end{bmatrix}$$
+  Evaluating via the real-equivalent decomposition Eq. (1b):
+
+  $$
+  \begin{aligned}
+  \mathbf{y}_{\mathbb{R}} &= \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}} \\
+  &= \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix} \\
+  &= \begin{bmatrix} (0.6)(0.7071) + (0.8)(0.7071) + 0.05 \\ (-0.8)(0.7071) + (0.6)(0.7071) + 0.02 \end{bmatrix} \\
+  &= \begin{bmatrix} 0.4243 + 0.5657 + 0.05 \\ -0.5657 + 0.4243 + 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\ -0.1214 \end{bmatrix}
+  \end{aligned}
+  $$
+
   Both models yield identical received signals to 4 decimal places.
 
 #### Python Algorithmic Implementation ([`src/mimo_channel.py`](src/mimo_channel.py#L11-L40)):
