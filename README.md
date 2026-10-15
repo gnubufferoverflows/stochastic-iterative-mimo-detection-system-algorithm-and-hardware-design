@@ -1249,10 +1249,10 @@ $$
 - **Worked Numerical Example:**
   Let $N=10$ bits (scale factor $1/1024$). Value $X = 0.6875 = 704 / 1024$:
   - Coarse word $X_1$: $704 \gg 5 = 22$. Scaled coarse value $= 22 / 32 = 0.6875$.
-  - Fine word $X_2$: $704 \& 31 = 0$. Fine value $= 0$.
+  - Fine word $X_2$: $704 \text{ AND } 31 = 0$. Fine value $= 0$.
   Consider $X = 723 / 1024 \approx 0.70605$:
   - Coarse word $X_1 = 723 \gg 5 = 22$ (value $22/32 = 0.6875$).
-  - Fine word $X_2 = 723 \& 31 = 19$ (value $19/32 = 0.59375$).
+  - Fine word $X_2 = 723 \text{ AND } 31 = 19$ (value $19/32 = 0.59375$).
   Reconstruction: $0.6875 + \frac{1}{32}(0.59375) = 0.6875 + 0.01855 = 0.70605$. Exact match.
 
 #### Python Algorithmic Implementation ([`src/tdg.py`](src/tdg.py#L77-L85)):
