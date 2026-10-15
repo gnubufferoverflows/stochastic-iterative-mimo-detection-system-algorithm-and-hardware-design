@@ -254,24 +254,16 @@ $$
 \tag{1b}
 $$
 
-where the constituent $2N_r \times 1$ vectors and $2N_r \times 2N_t$ channel matrix are defined as:
+where the $2N_r \times 1$ real received vector $\mathbf{y}_{\mathbb{R}}$, $2N_t \times 1$ transmit vector $\mathbf{s}_{\mathbb{R}}$, and $2N_r \times 1$ noise vector $\mathbf{n}_{\mathbb{R}}$ concatenate in-phase and quadrature components:
+
+- **Received Real Vector:** $\mathbf{y}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{y})^T & \mathrm{Im}(\mathbf{y})^T \end{bmatrix}^T \in \mathbb{R}^{2N_r}$
+- **Transmit Real Vector:** $\mathbf{s}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{s})^T & \mathrm{Im}(\mathbf{s})^T \end{bmatrix}^T \in \mathbb{R}^{2N_t}$
+- **Real Noise Vector:** $\mathbf{n}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{n})^T & \mathrm{Im}(\mathbf{n})^T \end{bmatrix}^T \in \mathbb{R}^{2N_r}$
+
+and the $2N_r \times 2N_t$ real-equivalent channel matrix $\mathbf{H}_{\mathbb{R}}$ is partitioned into four real $N_r \times N_t$ sub-matrices:
 
 $$
-\mathbf{y}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix}, \quad
-\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix}, \quad
-\mathbf{s}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{s}) \\ \mathrm{Im}(\mathbf{s}) \end{bmatrix}, \quad
-\mathbf{n}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{n}) \\ \mathrm{Im}(\mathbf{n}) \end{bmatrix}
-$$
-
-Expanding the matrix-vector multiplication yields:
-
-$$
-\begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix}
-=
-\begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix}
-\begin{bmatrix} \mathrm{Re}(\mathbf{s}) \\ \mathrm{Im}(\mathbf{s}) \end{bmatrix}
-+
-\begin{bmatrix} \mathrm{Re}(\mathbf{n}) \\ \mathrm{Im}(\mathbf{n}) \end{bmatrix}
+\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix} \in \mathbb{R}^{2N_r \times 2N_t}
 $$
 
 #### Four-Element Pedagogy:
@@ -290,13 +282,15 @@ $$
   Evaluating via the real-equivalent decomposition Eq. (1b):
 
   $$
-  \begin{aligned}
-  \mathbf{y}_{\mathbb{R}} &= \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}} \\
-  &= \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix} \\
-  &= \begin{bmatrix} (0.6)(0.7071) + (0.8)(0.7071) + 0.05 \\ (-0.8)(0.7071) + (0.6)(0.7071) + 0.02 \end{bmatrix} \\
-  &= \begin{bmatrix} 0.4243 + 0.5657 + 0.05 \\ -0.5657 + 0.4243 + 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\ -0.1214 \end{bmatrix}
-  \end{aligned}
+  \mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix}
   $$
+
+  - **In-Phase Output (Real Component):**
+    $$y_{\mathbb{R},0} = (0.6)(0.7071) + (0.8)(0.7071) + 0.05 = 0.4243 + 0.5657 + 0.05 = 1.0399$$
+  - **Quadrature Output (Imaginary Component):**
+    $$y_{\mathbb{R},1} = (-0.8)(0.7071) + (0.6)(0.7071) + 0.02 = -0.5657 + 0.4243 + 0.02 = -0.1214$$
+  - **Equivalent Real Vector:**
+    $$\mathbf{y}_{\mathbb{R}} = [1.0399, \; -0.1214]^T$$
 
   Both models yield identical received signals to 4 decimal places.
 
