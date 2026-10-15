@@ -249,12 +249,12 @@ For hardware realization without complex multipliers, the system is decomposed i
 
 $$
 \boxed{
-\begin{bmatrix} \operatorname{Re}(\mathbf{y}) \\ \operatorname{Im}(\mathbf{y}) \end{bmatrix}
+\begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix}
 =
-\begin{bmatrix} \operatorname{Re}(\mathbf{H}) & -\operatorname{Im}(\mathbf{H}) \\ \operatorname{Im}(\mathbf{H}) & \operatorname{Re}(\mathbf{H}) \end{bmatrix}
-\begin{bmatrix} \operatorname{Re}(\mathbf{s}) \\ \operatorname{Im}(\mathbf{s}) \end{bmatrix}
+\begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix}
+\begin{bmatrix} \mathrm{Re}(\mathbf{s}) \\ \mathrm{Im}(\mathbf{s}) \end{bmatrix}
 +
-\begin{bmatrix} \operatorname{Re}(\mathbf{n}) \\ \operatorname{Im}(\mathbf{n}) \end{bmatrix}
+\begin{bmatrix} \mathrm{Re}(\mathbf{n}) \\ \mathrm{Im}(\mathbf{n}) \end{bmatrix}
 }
 \tag{1-Real}
 $$
@@ -273,7 +273,7 @@ $$
   $$\mathbf{H}\mathbf{s} = (0.6 - 0.8j)\frac{1+j}{\sqrt{2}} = \frac{(0.6+0.8) + j(0.6-0.8)}{\sqrt{2}} = \frac{1.4 - 0.2j}{\sqrt{2}} \approx 0.9899 - 0.1414j$$
   $$\mathbf{y} = 0.9899 - 0.1414j + (0.05 + 0.02j) = 1.0399 - 0.1214j$$
   Using the real-equivalent decomposition Eq. (1-Real):
-  $$\begin{bmatrix} \operatorname{Re}(\mathbf{y}) \\ \operatorname{Im}(\mathbf{y}) \end{bmatrix} = \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix} = \begin{bmatrix} 0.4243 + 0.5657 + 0.05 \\ -0.5657 + 0.4243 + 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\ -0.1214 \end{bmatrix}$$
+  $$\begin{bmatrix} \mathrm{Re}(\mathbf{y}) \\ \mathrm{Im}(\mathbf{y}) \end{bmatrix} = \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix} = \begin{bmatrix} 0.4243 + 0.5657 + 0.05 \\ -0.5657 + 0.4243 + 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\ -0.1214 \end{bmatrix}$$
   Both models yield identical received signals to 4 decimal places.
 
 #### Python Algorithmic Implementation ([`src/mimo_channel.py`](src/mimo_channel.py#L11-L40)):
@@ -563,40 +563,40 @@ endmodule
 
 ### 7. Stochastic Saturating Addition & Table I Truth Table (Eq. 6, Table I)
 
-Stochastic addition over signed ternary streams $\{-1, 0, +1\}$ is governed by **Table I** [16]. When conflicting polarities cancel ($+1$ and $-1$), the adder holds the previous saturation state $\operatorname{sat}(Z(t-1))$, preventing error accumulation:
+Stochastic addition over signed ternary streams $\{-1, 0, +1\}$ is governed by **Table I** [16]. When conflicting polarities cancel ($+1$ and $-1$), the adder holds the previous saturation state $\mathrm{sat}(Z(t-1))$, preventing error accumulation:
 
 $$
 \boxed{
 \begin{aligned}
 s(Z) &= \bigl(a(X) \wedge s(Y)\bigr) \vee \bigl(a(Y) \wedge s(X)\bigr) \\
 a(Z) &= \bigl(a(X) \odot a(Y)\bigr) \vee \Bigl(a(X) \wedge \bigl(s(Y) \oplus s(X)\bigr)\Bigr) \\
-\operatorname{sat}(Z) &= \bigl(s(Y) \odot s(X)\bigr) \wedge \bigl(a(X) \wedge a(Y)\bigr)
+\mathrm{sat}(Z) &= \bigl(s(Y) \odot s(X)\bigr) \wedge \bigl(a(X) \wedge a(Y)\bigr)
 \end{aligned}
 }
 \tag{6}
 $$
 
 #### Table I: Truth Table of Stochastic Addition
-| $X(t), Y(t)$ | $Z(t)$ | $\operatorname{Sat}(Z(t))$ | Microarchitectural Action |
+| $X(t), Y(t)$ | $Z(t)$ | $\mathrm{Sat}(Z(t))$ | Microarchitectural Action |
 | :---: | :---: | :---: | :--- |
 | **$+1, +1$** | $+1$ | $+1$ | Positive saturation |
 | **$+1, 0$ or $0, +1$** | $+1$ | $0$ | Positive sum |
 | **$-1, 0$ or $0, -1$** | $-1$ | $0$ | Negative sum |
 | **$-1, -1$** | $-1$ | $-1$ | Negative saturation |
-| **$+1, -1$ or $-1, +1$** | $\operatorname{sat}(Z(t-1))$ | $0$ | Cancellation: retain previous saturation state |
-| **$0, 0$** | $\operatorname{sat}(Z(t-1))$ | $0$ | Idle: retain previous saturation state |
+| **$+1, -1$ or $-1, +1$** | $\mathrm{sat}(Z(t-1))$ | $0$ | Cancellation: retain previous saturation state |
+| **$0, 0$** | $\mathrm{sat}(Z(t-1))$ | $0$ | Idle: retain previous saturation state |
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Simple OR gates cannot add signed stochastic streams because probabilities saturate at $1.0$ and negative values cancel positive values. Table I solves this with a 2-bit state machine. When $+1$ and $-1$ arrive simultaneously, they cancel to $0$; however, to preserve running sum precision, the gate outputs the saved saturation state $\operatorname{sat}(Z(t-1))$. In FreePDK45, this requires 18 standard cells ($17.02\,\mu\text{m}^{2}$).
+- **Plain English & Microarchitectural Role:** Simple OR gates cannot add signed stochastic streams because probabilities saturate at $1.0$ and negative values cancel positive values. Table I solves this with a 2-bit state machine. When $+1$ and $-1$ arrive simultaneously, they cancel to $0$; however, to preserve running sum precision, the gate outputs the saved saturation state $\mathrm{sat}(Z(t-1))$. In FreePDK45, this requires 18 standard cells ($17.02\,\mu\text{m}^{2}$).
 - **Symbol Dictionary:**
   - $X(t), Y(t) \in \{-1, 0, +1\}$: Signed ternary stream inputs at clock cycle $t$.
   - $Z(t) \in \{-1, 0, +1\}$: Adder output stream bit.
-  - $\operatorname{sat}(Z(t)) \in \{-1, 0, +1\}$: Saturating memory state register.
+  - $\mathrm{sat}(Z(t)) \in \{-1, 0, +1\}$: Saturating memory state register.
   - $\odot$: XNOR logic operation; $\wedge$: AND; $\vee$: OR; $\oplus$: XOR.
 - **Worked Numerical Example:**
-  - Cycle 1: $X(1) = +1, Y(1) = +1 \implies Z(1) = +1, \operatorname{sat}(Z(1)) = +1$ (positive saturation).
+  - Cycle 1: $X(1) = +1, Y(1) = +1 \implies Z(1) = +1, \mathrm{sat}(Z(1)) = +1$ (positive saturation).
   - Cycle 2: $X(2) = -1, Y(2) = +1$ (opposite polarities).
-    Without memory, the output would be $0$. But Table I outputs $Z(2) = \operatorname{sat}(Z(1)) = +1$ and clears $\operatorname{sat}(Z(2)) = 0$. The net integrated value correctly reflects the accumulated sum.
+    Without memory, the output would be $0$. But Table I outputs $Z(2) = \mathrm{sat}(Z(1)) = +1$ and clears $\mathrm{sat}(Z(2)) = 0$. The net integrated value correctly reflects the accumulated sum.
 
 #### Python Algorithmic Implementation ([`src/tdg.py`](src/tdg.py#L40-L58)):
 ```python
@@ -876,7 +876,7 @@ The updated bit vector $\mathbf{x}_k$ maps into complex constellation symbols $s
 
 $$
 \boxed{
-s_k = \operatorname{map}(\mathbf{x}_k)
+s_k = \mathrm{map}(\mathbf{x}_k)
 }
 \tag{11}
 $$
@@ -886,7 +886,7 @@ $$
 - **Symbol Dictionary:**
   - $\mathbf{x}_k = [x_{k,0}, \dots, x_{k,M-1}]^{T}$: Binary bit vector of length $M$ ($M=4$ for 16-QAM, $M=6$ for 64-QAM).
   - $s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}} \in \mathbb{C}$: Complex constellation symbol.
-  - $\operatorname{map}(\cdot)$: Gray-coded constellation mapper function.
+  - $\mathrm{map}(\cdot)$: Gray-coded constellation mapper function.
 - **Worked Numerical Example:**
   For 16-QAM with unit energy normalization $\frac{1}{\sqrt{10}}$, bits $[0, 1, 1, 0]$ partition into:
   - Real bits $(0, 1) \implies s_{k,\mathrm{re}} = -1.0 / \sqrt{10} \approx -0.3162$
@@ -1138,7 +1138,7 @@ The Compare-and-Select (CAS) unit tracks the running maximum candidate metric:
 
 $$
 \boxed{
-\lambda = \operatorname{CAS}\bigl(\{\Lambda_i\}\bigr) = \max_{i \in \mathcal{I}^{+}} \Lambda_i - \max_{j \in \mathcal{I}^{-}} \Lambda_j
+\lambda = \mathrm{CAS}\bigl(\{\Lambda_i\}\bigr) = \max_{i \in \mathcal{I}^{+}} \Lambda_i - \max_{j \in \mathcal{I}^{-}} \Lambda_j
 }
 \tag{18}
 $$
