@@ -84,14 +84,14 @@ An independent reproduction, mathematical derivation, circuit architecture walkt
 
 ## Executive Summary
 
-Multiple-Input Multiple-Output (MIMO) spatial multiplexing is fundamental to modern wireless standards (5G-NR, Wi-Fi 6/7). However, soft-output MIMO detection requires evaluating log-likelihood ratios (LLRs) over a candidate space that scales exponentially ($2^{N_t M}$) with the number of transmit antennas $N_t$ and modulation order $M$. Traditional approaches face prohibitive bottlenecks:
+Multiple-Input Multiple-Output (MIMO) spatial multiplexing is fundamental to modern wireless standards (5G-NR, Wi-Fi 6/7). However, soft-output MIMO detection requires evaluating log-likelihood ratios (LLRs) over a candidate space that scales exponentially ($`2^{N_t M}`$) with the number of transmit antennas $`N_t`$ and modulation order $M$. Traditional approaches face prohibitive bottlenecks:
 - **Exhaustive Max-Log / List Sphere Detection (LSD):** Explodes in computational complexity and silicon area for $4 \times 4$ 16-QAM ($2^{16} = 65,536$ points) and 64-QAM ($2^{24} = 16,777,216$ points).
 - **Conventional MCMC Detectors:** Suffer from slow convergence and stalling in local minima because the detector's Gibbs sampler runs independently without direct feedback from the channel decoder.
 - **Serial Iterative Receivers:** Delay channel decoding until the detector finishes its inner iterations, resulting in high latency and low hardware utilization.
 
 In their seminal TCAS-I 2015 paper, **Chen, Hu, and Sobelman** introduced **Stochastic Iterative MIMO (SIM)**, delivering three breakthrough innovations:
 1. **Decoder-Driven Gibbs Sampling (GsUD):** Instead of sampling solely from internal conditional detector probabilities, the Gibbs sampler is directly refreshed by hard/soft decoded bits from the channel decoder. The decoder becomes an intrinsic component of the Gibbs update chain, drastically accelerating convergence to the optimal lattice vector.
-2. **Intermediate Residual Vector Sharing:** By tracking $\mathbf{r} = \mathbf{y} - \mathbf{Hs}$ and computing perturbation vectors $\Delta \mathbf{r}_{k,b} = \mathbf{H}_{:,k}(s_k^{+} - s_k^{-})$, the norm computation for each single-bit flip is reduced from a matrix-vector product to a single inner product:
+2. **Intermediate Residual Vector Sharing:** By tracking $\mathbf{r} = \mathbf{y} - \mathbf{Hs}$ and computing perturbation vectors $`\Delta \mathbf{r}_{k,b} = \mathbf{H}_{:,k}(s_k^{+} - s_k^{-})`$, the norm computation for each single-bit flip is reduced from a matrix-vector product to a single inner product:
 
 $$
 \boxed{
@@ -99,7 +99,7 @@ $$
 }
 $$
 
-3. **Two Divisions Generator (TDG) Stochastic Arithmetic:** Conventional Bernoulli multipliers suffer from high variance at short stream lengths ($L=64$). TDG partitions a fixed-point word into coarse and fine segments ($X = X_1 + 2^{-N_1} X_2$), achieving **39.1 dB SNR at $L=64$** (a **+11.3 dB gain** over Sawtooth Wave Generators).
+3. **Two Divisions Generator (TDG) Stochastic Arithmetic:** Conventional Bernoulli multipliers suffer from high variance at short stream lengths ($L=64$). TDG partitions a fixed-point word into coarse and fine segments ($`X = X_1 + 2^{-N_1} X_2`$), achieving **39.1 dB SNR at $L=64$** (a **+11.3 dB gain** over Sawtooth Wave Generators).
 4. **128-Parallel Fully Parallel Silicon Architecture:** A fully unrolled 128-detector bank fabricated in 130 nm CMOS delivers **787.5 Mbps iterative throughput** at 500 MHz ($1.98\,\mathrm{mm}^{2}$, 457.4K gates, 314 mW), matching the FER of traditional receivers with 4 outer iterations at **$3.7\times$ the throughput of PPTS** and **$6.0\times$ the throughput of SISO MMSE-PIC**.
 
 This repository provides an open-source, cycle-accurate implementation of the SIM algorithm and hardware suite across Python, synthesizable Verilog RTL, and FreePDK45 ASIC standard cell synthesis.
@@ -156,8 +156,8 @@ python3 tools/freepdk45/run_synth.py --project projects/stochastic-iterative-mim
 
 | Paper Section & Topic | Landmark Equation / Concept | Python Algorithmic Model | Synthesizable Verilog RTL | Verification & Testbench | Microarchitectural Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Sec. II-A: Channel Model** | $\boxed{\mathbf{y} = \mathbf{Hs} + \mathbf{n}}$ (Eq. 1) / $\boxed{\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}}$ (Eq. 1b) | [`generate_channel`, `complex_to_real_mimo`](src/mimo_channel.py#L11-L40) | Handled in testbench / system top | [`sim/run_tests.py`](sim/run_tests.py#L80-L95) | $4 \times 4$ Rayleigh flat-fading; real equivalent $8 \times 8$ real matrix. |
-| **Sec. II-A: Soft LLR** | $\boxed{\lambda(x_{k,b}) = \ln \frac{P(x_{k,b}=+1)}{P(x_{k,b}=-1)}}$ (Eq. 2) | [`maxlog_llr_qam`](src/sim_mimo.py#L50-L115) | [`llr_calculator.v`](hdl/llr_calculator.v#L35-L45) | [`sim/run_tests.py`](sim/run_tests.py) | Max-log approximation evaluated via stochastic norm streams. |
+| **Sec. II-A: Channel Model** | $\boxed{\mathbf{y} = \mathbf{Hs} + \mathbf{n}}$ (Eq. 1) / $`\boxed{\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}}`$ (Eq. 1b) | [`generate_channel`, `complex_to_real_mimo`](src/mimo_channel.py#L11-L40) | Handled in testbench / system top | [`sim/run_tests.py`](sim/run_tests.py#L80-L95) | $4 \times 4$ Rayleigh flat-fading; real equivalent $8 \times 8$ real matrix. |
+| **Sec. II-A: Soft LLR** | $`\boxed{\lambda(x_{k,b}) = \ln \frac{P(x_{k,b}=+1)}{P(x_{k,b}=-1)}}`$ (Eq. 2) | [`maxlog_llr_qam`](src/sim_mimo.py#L50-L115) | [`llr_calculator.v`](hdl/llr_calculator.v#L35-L45) | [`sim/run_tests.py`](sim/run_tests.py) | Max-log approximation evaluated via stochastic norm streams. |
 | **Sec. II-A: Direct MAP** | $2^{N_t M - 1}$ sum (Eq. 3) | [`maxlog_llr_qam`](src/sim_mimo.py) | Exponential cost avoided by SIM | Analysis reference | Direct evaluation prohibitive for high-order constellations. |
 | **Sec. II-A: Gibbs Sampling** | $\boxed{P(x_{k,b}=+1) = \frac{1}{1+e^{-\lambda}}}$ (Eq. 4) | [`sim_mimo_detect`](src/sim_mimo.py#L145-L160) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v#L125-L135) | [`hdl/tb_sim.v`](hdl/tb_sim.v) | Bernoulli trial updates single bit conditioning on current state. |
 | **Sec. II-B: SC Representation** | $\boxed{X = (1-2\mathbb{E}[s])\mathbb{E}[a]}$ (Eq. 5, Fig. 1) | [`quantize_signed`](src/tdg.py#L64-L75) | [`llr_calculator.v`](hdl/llr_calculator.v#L42-L48) | [`sim/run_tests.py`](sim/run_tests.py#L35-L42) | Signed stochastic stream: sign bit stream + unipolar magnitude stream. |
@@ -167,15 +167,15 @@ python3 tools/freepdk45/run_synth.py --project projects/stochastic-iterative-mim
 | **Sec. III-B: Warm-Up Metrics** | $\boxed{\Lambda(\pm 1) = -\|\mathbf{y}-\mathbf{Hs}^{\pm}\|^{2}/\sigma^{2}}$ (Eq. 7) | [`maxlog_llr_qam`](src/sim_mimo.py#L88-L112) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v#L90-L100) | [`sim/run_tests.py`](sim/run_tests.py) | Evaluates candidate perturbation distance around current state. |
 | **Sec. III-B: Gibbs Update** | $\boxed{x_{k,b}^{(t+1)} \sim \mathrm{Bernoulli}(P)}$ (Eq. 8) | [`sim_mimo_detect`](src/sim_mimo.py#L148-L158) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) | [`sim/run_tests.py`](sim/run_tests.py) | Dithered sigmoid sampling prevents latching in sub-optimal local minima. |
 | **Sec. III-B: Warm-Up LLR** | $\boxed{\lambda \approx \max\Lambda(+1)-\max\Lambda(-1)}$ (Eq. 9) | [`maxlog_llr_qam`](src/sim_mimo.py) | [`llr_calculator.v`](hdl/llr_calculator.v#L35) | [`sim/run_tests.py`](sim/run_tests.py) | Max-log metric difference passed to channel decoder. |
-| **Sec. III-B: GsUD Decoder Update** | $\boxed{x_{k,b}^{(t+1)} = \hat{x}_{k,b}^{\mathrm{dec}}}$ (Eq. 10) | [`sim_mimo_detect`](src/sim_mimo.py#L170-L180) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v#L125-L128) | [`hdl/tb_sim.v`](hdl/tb_sim.v#L140-L155) | Hardware input `dec_bits_in` directly sets Gibbs state. |
-| **Sec. III-B: Constellation Mapping** | $\boxed{s_k = \mathrm{map}(\mathbf{x}_k)}$ (Eq. 11) | [`map_bits_to_qam`](src/qam.py#L78-L93) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) | [`sim/run_tests.py`](sim/run_tests.py#L65-L75) | Gray-coded PAM-4 (16-QAM) and PAM-8 (64-QAM) mapping. |
-| **Sec. III-B: Extrinsic LLR** | $\boxed{\lambda_{\mathrm{ext}} = \Lambda(+1)-\Lambda(-1)-\lambda_a}$ (Eqs. 12–14) | [`sim_mimo_detect`](src/sim_mimo.py#L184-L186) | [`llr_calculator.v`](hdl/llr_calculator.v) | [`sim/run_tests.py`](sim/run_tests.py) | A-priori subtraction prevents positive feedback instability. |
+| **Sec. III-B: GsUD Decoder Update** | $`\boxed{x_{k,b}^{(t+1)} = \hat{x}_{k,b}^{\mathrm{dec}}}`$ (Eq. 10) | [`sim_mimo_detect`](src/sim_mimo.py#L170-L180) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v#L125-L128) | [`hdl/tb_sim.v`](hdl/tb_sim.v#L140-L155) | Hardware input `dec_bits_in` directly sets Gibbs state. |
+| **Sec. III-B: Constellation Mapping** | $`\boxed{s_k = \mathrm{map}(\mathbf{x}_k)}`$ (Eq. 11) | [`map_bits_to_qam`](src/qam.py#L78-L93) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) | [`sim/run_tests.py`](sim/run_tests.py#L65-L75) | Gray-coded PAM-4 (16-QAM) and PAM-8 (64-QAM) mapping. |
+| **Sec. III-B: Extrinsic LLR** | $`\boxed{\lambda_{\mathrm{ext}} = \Lambda(+1)-\Lambda(-1)-\lambda_a}`$ (Eqs. 12–14) | [`sim_mimo_detect`](src/sim_mimo.py#L184-L186) | [`llr_calculator.v`](hdl/llr_calculator.v) | [`sim/run_tests.py`](sim/run_tests.py) | A-priori subtraction prevents positive feedback instability. |
 | **Sec. III-C: Residual Sharing** | $\boxed{\mathbf{r} = \mathbf{y}-\mathbf{Hs}}$ (Eq. 15) | [`compute_residual`](src/sim_mimo.py#L30-L33) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) | [`sim/run_tests.py`](sim/run_tests.py#L118-L135) | Global residual maintained across Gibbs bit flips. |
 | **Sec. III-C: Column Perturbation** | $\boxed{\Delta\mathbf{r} = \mathbf{H}_{:,k}(s^{+}-s^{-})}$ (Eq. 16) | [`update_residual_delta`](src/sim_mimo.py#L35-L47) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) | [`sim/run_tests.py`](sim/run_tests.py) | Perturbation vector scales single column of channel matrix. |
 | **Sec. III-C: Fast Norm Update** | $\boxed{\|\mathbf{r}\pm\Delta\mathbf{r}\|^{2} = \|\mathbf{r}\|^{2} \pm 2\mathbf{r}^{H}\Delta\mathbf{r} + \|\Delta\mathbf{r}\|^{2}}$ (Eq. 17) | [`update_residual_delta`](src/sim_mimo.py#L41-L46) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) | [`sim/run_tests.py`](sim/run_tests.py) | Inner product replaces full matrix-vector reconstruction. |
 | **Sec. III-C: Compare-and-Select** | $\boxed{\lambda = \mathrm{CAS}(\{\Lambda_i\})}$ (Eq. 18, Fig. 8) | Python max-log reduction | [`sc_cas_unit.v`](hdl/sc_cas_unit.v#L1-L32) | [`hdl/tb_sim.v`](hdl/tb_sim.v#L50-L55) | Subtraction + MSB select; feedback register tracks running max. |
-| **Sec. III-D: TDG Decomposition** | $\boxed{X = X_1 + 2^{-N_1}X_2}$ (Eqs. 19–22, Fig. 5) | [`tdg_decompose`, `tdg_multiply`](src/tdg.py#L77-L143) | [`tdg_accum.v`, `tdg_accum_k5.v`](hdl/tdg_accum.v) | [`sim/run_tests.py`](sim/run_tests.py#L100-L115) | Coarse ($N_1$) + fine ($N_2$) partitions; achieves 39.1 dB SNR at $L=64$. |
-| **Sec. IV-A: Fully Parallel SIM** | $\boxed{N_d\cdot N_t\cdot M = N_{\mathrm{dec}}}$ (Eqs. 23–24, Fig. 6) | Vectorized multi-frame batch | 128-parallel array topology | System dimensioning | 128 cores * 4 antennas * 4 bits = 2048-bit frame; 16 Gbps peak LLR rate. |
+| **Sec. III-D: TDG Decomposition** | $`\boxed{X = X_1 + 2^{-N_1}X_2}`$ (Eqs. 19–22, Fig. 5) | [`tdg_decompose`, `tdg_multiply`](src/tdg.py#L77-L143) | [`tdg_accum.v`, `tdg_accum_k5.v`](hdl/tdg_accum.v) | [`sim/run_tests.py`](sim/run_tests.py#L100-L115) | Coarse ($`N_1`$) + fine ($`N_2`$) partitions; achieves 39.1 dB SNR at $L=64$. |
+| **Sec. IV-A: Fully Parallel SIM** | $`\boxed{N_d\cdot N_t\cdot M = N_{\mathrm{dec}}}`$ (Eqs. 23–24, Fig. 6) | Vectorized multi-frame batch | 128-parallel array topology | System dimensioning | 128 cores * 4 antennas * 4 bits = 2048-bit frame; 16 Gbps peak LLR rate. |
 
 ---
 
@@ -354,16 +354,16 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** $\lambda(x_{k,b})$ encodes the logarithm of the odds that bit $x_{k,b}$ is $+1$ versus $-1$. A positive value signals $+1$ is more probable; a negative value signals $-1$; and the magnitude $|\lambda|$ represents detection confidence. In hardware, $\lambda$ is represented as a signed 16-bit Two's Complement System (TCS) integer: the sign bit indicates the hard decision, while the magnitude determines reliability in the turbo decoder.
+- **Plain English & Microarchitectural Role:** $`\lambda(x_{k,b})`$ encodes the logarithm of the odds that bit $`x_{k,b}`$ is $+1$ versus $-1$. A positive value signals $+1$ is more probable; a negative value signals $-1$; and the magnitude $|\lambda|$ represents detection confidence. In hardware, $\lambda$ is represented as a signed 16-bit Two's Complement System (TCS) integer: the sign bit indicates the hard decision, while the magnitude determines reliability in the turbo decoder.
 - **Symbol Dictionary:**
   - $\lambda(x_{k,b}) \in \mathbb{R}$: Real log-likelihood ratio. Mapped to signed 16-bit TCS (`wire signed [15:0] llr_tcs`).
   - $x_{k,b} \in \{-1, +1\}$: Bipolar bit representation where binary '1' is $+1$ and binary '0' is $-1$.
   - $P(x_{k,b}=+1) \in [0, 1]$: Posterior probability of the bit being $+1$.
   - $P(x_{k,b}=-1) \in [0, 1]$: Posterior probability of the bit being $-1$, with $P(+1) + P(-1) = 1$.
 - **Worked Numerical Example:**
-  Suppose conditional observation yields $P(x_{k,b}=+1) = 0.90$ and $P(x_{k,b}=-1) = 0.10$:
+  Suppose conditional observation yields $`P(x_{k,b}=+1) = 0.90`$ and $`P(x_{k,b}=-1) = 0.10`$:
   $$\lambda(x_{k,b}) = \ln\left(\frac{0.90}{0.10}\right) = \ln(9.0) \approx +2.1972$$
-  If instead $P(x_{k,b}=+1) = 0.05$ and $P(x_{k,b}=-1) = 0.95$:
+  If instead $`P(x_{k,b}=+1) = 0.05`$ and $`P(x_{k,b}=-1) = 0.95`$:
   $$\lambda(x_{k,b}) = \ln\left(\frac{0.05}{0.95}\right) = \ln(0.0526) \approx -2.9444$$
   High positive value indicates confident $+1$; high negative value indicates confident $-1$.
 
@@ -403,11 +403,11 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** Exact Maximum A Posteriori (MAP) soft detection calculates the exact marginal probability by enumerating every possible configuration of all other transmit bits. The number of terms is $2^{N_t M - 1}$ per bit. For $4 \times 4$ 16-QAM, this requires summing $32,768$ exponential terms per bit ($524,288$ evaluations per frame). In hardware, this exponential complexity causes severe area and power bottlenecks. The SIM detector replaces this exhaustive sum with MCMC Gibbs sampling.
 - **Symbol Dictionary:**
-  - $\mathbf{x}_{-k,b} \in \{-1, +1\}^{N_t M - 1}$: Vector containing all transmitted bits except the $b$-th bit on antenna $k$.
-  - $\boldsymbol{\lambda}_2^{e} \in \mathbb{R}^{N_t M}$: Extrinsic soft information fed back from the channel decoder.
-  - $\sum_{\mathbf{x}_{-k,b}}$: Exhaustive summation over $2^{N_t M - 1}$ lattice points.
+  - $`\mathbf{x}_{-k,b} \in \{-1, +1\}^{N_t M - 1}`$: Vector containing all transmitted bits except the $b$-th bit on antenna $k$.
+  - $`\boldsymbol{\lambda}_2^{e} \in \mathbb{R}^{N_t M}`$: Extrinsic soft information fed back from the channel decoder.
+  - $`\sum_{\mathbf{x}_{-k,b}}`$: Exhaustive summation over $`2^{N_t M - 1}`$ lattice points.
 - **Worked Numerical Example:**
-  For $4 \times 4$ 16-QAM, $N_t = 4, M = 4 \implies N_t M = 16$ bits. Evaluating Eq. (3) requires:
+  For $4 \times 4$ 16-QAM, $`N_t = 4, M = 4 \implies N_t M = 16`$ bits. Evaluating Eq. (3) requires:
   $$2^{16-1} = 2^{15} = 32,768\ \text{candidate points per bit}$$
   For all 16 bits, total candidate points $= 16 \times 32,768 = 524,288$. For 64-QAM ($N_t M = 24$), each bit requires $2^{23} = 8,388,608$ points. MCMC Gibbs sampling bypasses this intractable calculation by walking along the most likely trajectories.
 
@@ -439,8 +439,8 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** Instead of marginalizing over all combinations, Gibbs sampling updates one bit at a time while holding all other bits constant. The conditional probability that the sampled bit is $+1$ is a logistic sigmoid of its LLR $\lambda$. In hardware, this is implemented by evaluating $\lambda$, mapping it through a small sigmoid lookup table (LUT), and comparing the result against a uniform pseudo-random number generator (PRNG).
 - **Symbol Dictionary:**
-  - $\lambda(x_{k,b}) \in \mathbb{R}$: Conditional LLR of bit $x_{k,b}$ given current states $\mathbf{x}_{-k,b}$.
-  - $P(x_{k,b}=+1) \in [0, 1]$: Probability of selecting $+1$ for the next state of bit $x_{k,b}$.
+  - $`\lambda(x_{k,b}) \in \mathbb{R}`$: Conditional LLR of bit $`x_{k,b}`$ given current states $`\mathbf{x}_{-k,b}`$.
+  - $`P(x_{k,b}=+1) \in [0, 1]`$: Probability of selecting $+1$ for the next state of bit $`x_{k,b}`$.
   - $\exp(-\lambda)$: Exponential metric evaluated via hardware lookup table or stochastic tanh function.
 - **Worked Numerical Example:**
   Suppose the conditional metric yields $\lambda(x_{k,b}) = +1.386$:
@@ -737,10 +737,10 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** To determine the conditional probability of bit $x_{k,b}$, the detector constructs two test symbols: $\mathbf{s}^{+}$ (where bit $x_{k,b}$ is fixed to $+1$) and $\mathbf{s}^{-}$ (where bit $x_{k,b}$ is fixed to $-1$), while keeping all other symbols equal to their current Gibbs state. The metric $\Lambda$ measures the negative squared Euclidean error normalized by noise variance $\sigma^{2}$, offset by any a-priori belief $\lambda_a$. In hardware, these distance metrics are computed by accumulating stochastic norm streams.
+- **Plain English & Microarchitectural Role:** To determine the conditional probability of bit $`x_{k,b}`$, the detector constructs two test symbols: $\mathbf{s}^{+}$ (where bit $`x_{k,b}`$ is fixed to $+1$) and $\mathbf{s}^{-}$ (where bit $`x_{k,b}`$ is fixed to $-1$), while keeping all other symbols equal to their current Gibbs state. The metric $\Lambda$ measures the negative squared Euclidean error normalized by noise variance $\sigma^{2}$, offset by any a-priori belief $`\lambda_a`$. In hardware, these distance metrics are computed by accumulating stochastic norm streams.
 - **Symbol Dictionary:**
   - $\Lambda(+1), \Lambda(-1) \in \mathbb{R}$: Log conditional probability metrics for bit $x_{k,b} = \pm 1$. Stored in signed 16-bit TCS registers (`reg signed [15:0] metric_pos, metric_neg`).
-  - $\mathbf{s}^{+}, \mathbf{s}^{-} \in \mathcal{S}^{N_t}$: Candidate symbol vectors with $x_{k,b} = +1$ and $x_{k,b} = -1$, respectively.
+  - $`\mathbf{s}^{+}, \mathbf{s}^{-} \in \mathcal{S}^{N_t}`$: Candidate symbol vectors with $`x_{k,b} = +1`$ and $`x_{k,b} = -1`$, respectively.
   - $\sigma^{2} = N_0$: Noise variance.
   - $\lambda_a \in \mathbb{R}$: A-priori LLR from previous iterations (zero during initial warm-up).
 - **Worked Numerical Example:**
@@ -834,7 +834,7 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** The exact MAP sum of Eq. (3) is approximated by the **max-log** rule: $\ln(\sum e^{\Lambda_i}) \approx \max(\Lambda_i)$. The LLR simplifies to the difference between the maximum metric found when bit $x_{k,b}=+1$ versus when $x_{k,b}=-1$. In hardware, this is computed by two parallel **Compare-and-Select (CAS)** units feeding a 16-bit subtractor.
+- **Plain English & Microarchitectural Role:** The exact MAP sum of Eq. (3) is approximated by the **max-log** rule: $`\ln(\sum e^{\Lambda_i}) \approx \max(\Lambda_i)`$. The LLR simplifies to the difference between the maximum metric found when bit $`x_{k,b}=+1`$ versus when $`x_{k,b}=-1`$. In hardware, this is computed by two parallel **Compare-and-Select (CAS)** units feeding a 16-bit subtractor.
 - **Symbol Dictionary:**
   - $\lambda(x_{k,b}) \in \mathbb{R}$: Output max-log LLR sent to the outer channel decoder.
   - $\mathcal{S}_{k,b}^{+1}$: Subset of constellation candidates where bit $b$ of antenna $k$ is $+1$.
@@ -880,7 +880,7 @@ $$
   - $x_{k,b}^{(t+1)} \in \{-1, +1\}$: Gibbs sampler bit state for the next outer iteration.
   - $\hat{x}_{k,b}^{\mathrm{dec}} \in \{-1, +1\}$: Hard decision bit emitted by the outer channel decoder (`input wire [TOTAL_BITS-1:0] dec_bits_in`).
 - **Worked Numerical Example:**
-  Suppose bit $x_{2,0}$ was incorrectly estimated as $-1$ due to deep channel fading. The outer channel decoder uses code parity across all antennas to correct this bit to $+1$ ($\hat{x}_{2,0}^{\mathrm{dec}} = +1$). Eq. (10) overwrites register `current_bits[8]` with $1$, instantly rectifying the error and guiding all subsequent Gibbs iterations.
+  Suppose bit $`x_{2,0}`$ was incorrectly estimated as $-1$ due to deep channel fading. The outer channel decoder uses code parity across all antennas to correct this bit to $+1$ ($`\hat{x}_{2,0}^{\mathrm{dec}} = +1`$). Eq. (10) overwrites register `current_bits[8]` with $1$, instantly rectifying the error and guiding all subsequent Gibbs iterations.
 
 #### Python Algorithmic Implementation ([`src/sim_mimo.py`](src/sim_mimo.py#L164-L168)):
 ```python
@@ -902,7 +902,7 @@ end
 
 ### 6. Gray-Coded Constellation Mapping (Eq. 11)
 
-The updated bit vector $\mathbf{x}_k$ maps into complex constellation symbols $s_k \in \mathcal{S}$:
+The updated bit vector $`\mathbf{x}_k`$ maps into complex constellation symbols $`s_k \in \mathcal{S}`$:
 
 $$
 \boxed{
@@ -914,14 +914,14 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** Maps binary bits to in-phase (I) and quadrature (Q) pulse amplitude modulation (PAM) levels using Gray coding so adjacent constellation points differ by exactly one bit. In hardware, this is implemented as small 4:1 multiplexers for 16-QAM or 8:1 multiplexers for 64-QAM, producing normalized fixed-point symbol coordinates.
 - **Symbol Dictionary:**
-  - $\mathbf{x}_k = [x_{k,0}, \dots, x_{k,M-1}]^{T}$: Binary bit vector of length $M$ ($M=4$ for 16-QAM, $M=6$ for 64-QAM).
-  - $s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}} \in \mathbb{C}$: Complex constellation symbol.
+  - $`\mathbf{x}_k = [x_{k,0}, \dots, x_{k,M-1}]^{T}`$: Binary bit vector of length $M$ ($M=4$ for 16-QAM, $M=6$ for 64-QAM).
+  - $`s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}} \in \mathbb{C}`$: Complex constellation symbol.
   - $\mathrm{map}(\cdot)$: Gray-coded constellation mapper function.
 - **Worked Numerical Example:**
   For 16-QAM with unit energy normalization $\frac{1}{\sqrt{10}}$, bits $[0, 1, 1, 0]$ partition into:
   - Real bits $(0, 1) \implies s_{k,\mathrm{re}} = -1.0 / \sqrt{10} \approx -0.3162$
   - Imaginary bits $(1, 0) \implies s_{k,\mathrm{im}} = +3.0 / \sqrt{10} \approx +0.9487$
-  - Result: $s_k = -0.3162 + 0.9487j$. Total energy $|s_k|^{2} = 0.10 + 0.90 = 1.0000$.
+  - Result: $`s_k = -0.3162 + 0.9487j`$. Total energy $`|s_k|^{2} = 0.10 + 0.90 = 1.0000`$.
 
 #### Python Algorithmic Implementation ([`src/qam.py`](src/qam.py#L78-L93)):
 ```python
@@ -970,8 +970,8 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** Equations (12) and (13) compute updated conditional log metrics centered around the decoder's revised belief. Unlike the warm-up phase where the trajectory was uncertain, the Gibbs state is now anchored near the true transmit vector, allowing refined metric estimation.
 - **Symbol Dictionary:**
-  - $\mathbf{s}_{(\hat{x}_{k,b}^{\mathrm{dec}}=\pm 1)}$: Symbol vector formed by forcing bit $x_{k,b}$ to $\pm 1$ while holding all other bits at their decoder-updated values.
-  - $\lambda_a(x_{k,b} = \pm 1)$: A-priori information from the decoder.
+  - $`\mathbf{s}_{(\hat{x}_{k,b}^{\mathrm{dec}}=\pm 1)}`$: Symbol vector formed by forcing bit $`x_{k,b}`$ to $\pm 1$ while holding all other bits at their decoder-updated values.
+  - $`\lambda_a(x_{k,b} = \pm 1)`$: A-priori information from the decoder.
 - **Worked Numerical Example:**
   After decoder correction, the residual norm shrinks from $0.35$ to $0.04$. At $\sigma^{2} = 0.10$:
   $$\Lambda(+1) = -\frac{0.04}{0.10} = -0.40, \quad \Lambda(-1) = -\frac{0.84}{0.10} = -8.40$$
@@ -1013,9 +1013,9 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** In turbo principle theory, passing an agent its own beliefs creates runaway positive feedback and premature saturation. Extrinsic information $\lambda_{\mathrm{ext}}$ represents strictly *new* evidence discovered by the detector. In hardware, this is implemented as an arithmetic subtraction stage after the CAS unit.
 - **Symbol Dictionary:**
-  - $\lambda_{\mathrm{ext}}(x_{k,b}) \in \mathbb{R}$: Extrinsic LLR delivered to the channel decoder.
+  - $`\lambda_{\mathrm{ext}}(x_{k,b}) \in \mathbb{R}`$: Extrinsic LLR delivered to the channel decoder.
   - $\Lambda(+1) - \Lambda(-1)$: Raw intrinsic metric difference.
-  - $\lambda_a(x_{k,b}) \in \mathbb{R}$: A-priori LLR received from the decoder in the previous iteration.
+  - $`\lambda_a(x_{k,b}) \in \mathbb{R}`$: A-priori LLR received from the decoder in the previous iteration.
 - **Worked Numerical Example:**
   Suppose raw metric difference is $\Lambda(+1) - \Lambda(-1) = +5.50$ and incoming a-priori LLR was $\lambda_a = +1.20$:
   $$\lambda_{\mathrm{ext}} = +5.50 - (+1.20) = +4.3000$$
@@ -1039,7 +1039,7 @@ assign llr_tcs = raw_llr - a_priori_llr;
 
 ### 9. Intermediate Residual Vector Sharing (Eq. 15)
 
-Recomputing $\mathbf{y} - \mathbf{Hs}$ from scratch for every single-bit test requires $O(N_r N_t)$ multiplications. The SIM detector avoids this by tracking the global residual vector:
+Recomputing $\mathbf{y} - \mathbf{Hs}$ from scratch for every single-bit test requires $`O(N_r N_t)`$ multiplications. The SIM detector avoids this by tracking the global residual vector:
 
 $$
 \boxed{
@@ -1053,10 +1053,10 @@ $$
 - **Symbol Dictionary:**
   - $\mathbf{r} \in \mathbb{R}^{2N_r}$: Shared residual vector ($8 \times 1$). Stored in 16-bit registers (`reg signed [15:0] reg_r [0:7]`).
   - $\mathbf{y} \in \mathbb{R}^{2N_r}$: Real received signal vector ($8 \times 1$).
-  - $\mathbf{H} \in \mathbb{R}^{2N_r \times 2N_t}$: Real channel matrix ($8 \times 8$).
+  - $`\mathbf{H} \in \mathbb{R}^{2N_r \times 2N_t}`$: Real channel matrix ($8 \times 8$).
   - $\mathbf{s} \in \mathbb{R}^{2N_t}$: Real symbol state vector ($8 \times 1$).
 - **Worked Numerical Example:**
-  Suppose $y_0 = 1.05$ and reconstructed signal $(\mathbf{Hs})_0 = 0.98$:
+  Suppose $`y_0 = 1.05`$ and reconstructed signal $`(\mathbf{Hs})_0 = 0.98`$:
   $$r_0 = 1.05 - 0.98 = +0.0700$$
   This residual is held in register `reg_r[0]` for incremental updates.
 
@@ -1084,7 +1084,7 @@ end
 
 ### 10. Column Perturbation Difference Vector (Eq. 16)
 
-When bit $x_{k,b}$ flips, only the $k$-th transmit symbol changes from $s_k^{-}$ to $s_k^{+}$, producing a column perturbation:
+When bit $`x_{k,b}`$ flips, only the $k$-th transmit symbol changes from $`s_k^{-}`$ to $`s_k^{+}`$, producing a column perturbation:
 
 $$
 \boxed{
@@ -1094,15 +1094,15 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** When testing a hypothetical bit flip on antenna $k$, the other $N_t - 1$ antennas remain unchanged. The change in the reconstructed receive vector is simply the $k$-th column of $\mathbf{H}$ scaled by the symbol amplitude change $\Delta s_k = s_k^{+} - s_k^{-}$. In hardware, $\Delta s_k$ takes discrete values from the QAM alphabet (e.g. $\pm 2/\sqrt{10}$ for 16-QAM), so computing $\Delta \mathbf{r}$ requires only simple hardwired shifts and signs, avoiding general-purpose multipliers.
+- **Plain English & Microarchitectural Role:** When testing a hypothetical bit flip on antenna $k$, the other $`N_t - 1`$ antennas remain unchanged. The change in the reconstructed receive vector is simply the $k$-th column of $\mathbf{H}$ scaled by the symbol amplitude change $`\Delta s_k = s_k^{+} - s_k^{-}`$. In hardware, $`\Delta s_k`$ takes discrete values from the QAM alphabet (e.g. $\pm 2/\sqrt{10}$ for 16-QAM), so computing $\Delta \mathbf{r}$ requires only simple hardwired shifts and signs, avoiding general-purpose multipliers.
 - **Symbol Dictionary:**
-  - $\Delta \mathbf{r}_{k,b} \in \mathbb{R}^{2N_r}$: Perturbation vector ($8 \times 1$).
-  - $\mathbf{H}_{:,k} \in \mathbb{R}^{2N_r}$: $k$-th column of the real channel matrix.
-  - $s_k^{+} - s_k^{-} \in \mathbb{R}$: Scalar symbol difference between $+1$ and $-1$ bit hypotheses.
+  - $`\Delta \mathbf{r}_{k,b} \in \mathbb{R}^{2N_r}`$: Perturbation vector ($8 \times 1$).
+  - $`\mathbf{H}_{:,k} \in \mathbb{R}^{2N_r}`$: $k$-th column of the real channel matrix.
+  - $`s_k^{+} - s_k^{-} \in \mathbb{R}`$: Scalar symbol difference between $+1$ and $-1$ bit hypotheses.
 - **Worked Numerical Example:**
   In 16-QAM with scaling $\alpha = 1/\sqrt{10}$, flipping the inner bit changes the PAM level from $-1\alpha$ to $+1\alpha$:
   $$s_k^{+} - s_k^{-} = 1\alpha - (-1\alpha) = 2\alpha = \frac{2.0}{\sqrt{10}} \approx 0.6325$$
-  If column $k$ has entries $H_{0,k} = 0.50$ and $H_{1,k} = -0.30$:
+  If column $k$ has entries $`H_{0,k} = 0.50`$ and $`H_{1,k} = -0.30`$:
   $$\Delta r_{0} = 0.50 \times 0.6325 = 0.3162, \quad \Delta r_{1} = -0.30 \times 0.6325 = -0.1897$$
 
 #### Python Algorithmic Implementation ([`src/sim_mimo.py`](src/sim_mimo.py#L35-L40)):
@@ -1132,11 +1132,11 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Evaluating the squared norm $\|\mathbf{y} - \mathbf{Hs}\|^{2}$ usually requires $2N_r$ squarings and additions ($8$ squarings). With Eq. (17), since $\|\mathbf{r}\|^{2}$ and $\|\Delta\mathbf{r}_{k,b}\|^{2}$ are pre-computed and stored in registers, evaluating each candidate requires **only one inner product** $\mathbf{r}^{H} \Delta \mathbf{r}_{k,b}$. In stochastic computing, an inner product maps directly to parallel signed multipliers and saturating adder trees.
+- **Plain English & Microarchitectural Role:** Evaluating the squared norm $\|\mathbf{y} - \mathbf{Hs}\|^{2}$ usually requires $`2N_r`$ squarings and additions ($8$ squarings). With Eq. (17), since $\|\mathbf{r}\|^{2}$ and $`\|\Delta\mathbf{r}_{k,b}\|^{2}`$ are pre-computed and stored in registers, evaluating each candidate requires **only one inner product** $`\mathbf{r}^{H} \Delta \mathbf{r}_{k,b}`$. In stochastic computing, an inner product maps directly to parallel signed multipliers and saturating adder trees.
 - **Symbol Dictionary:**
   - $\|\mathbf{r}\|^{2} \in \mathbb{R}^{+}$: Pre-computed squared norm of current residual.
   - $\|\Delta\mathbf{r}_{k,b}\|^{2} \in \mathbb{R}^{+}$: Pre-computed squared norm of perturbation vector.
-  - $\mathbf{r}^{H} \Delta\mathbf{r}_{k,b} = \sum_{i=1}^{2N_r} r_i \cdot \Delta r_i \in \mathbb{R}$: Real inner product.
+  - $`\mathbf{r}^{H} \Delta\mathbf{r}_{k,b} = \sum_{i=1}^{2N_r} r_i \cdot \Delta r_i \in \mathbb{R}`$: Real inner product.
 - **Worked Numerical Example:**
   Suppose $\|\mathbf{r}\|^{2} = 0.050$, $\|\Delta\mathbf{r}\|^{2} = 0.200$, and inner product $\mathbf{r}^{T} \Delta\mathbf{r} = -0.040$:
   $$\|\mathbf{r} + \Delta\mathbf{r}\|^{2} = 0.050 + 2(-0.040) + 0.200 = 0.050 - 0.080 + 0.200 = 0.1700$$
@@ -1187,7 +1187,7 @@ $$
 - **Plain English & Microarchitectural Role:** As candidate perturbation metrics stream in cycle-by-cycle, the CAS unit maintains the peak metric in an internal feedback register. A subtractor compares the incoming candidate against the current maximum; if the candidate is larger (subtraction MSB is 0), the multiplexer updates the register. In FreePDK45, one CAS unit requires 70 standard cells ($160.13\,\mu\text{m}^{2}$).
 - **Symbol Dictionary:**
   - $\Lambda_i \in \mathbb{R}$: Input candidate metric at cycle $i$ (`input wire signed [WIDTH-1:0] in_val`).
-  - $\max_{i} \Lambda_i \in \mathbb{R}$: Running maximum (`output wire signed [WIDTH-1:0] max_out`).
+  - $`\max_{i} \Lambda_i \in \mathbb{R}`$: Running maximum (`output wire signed [WIDTH-1:0] max_out`).
   - `clr`: Synchronous control signal resetting the register to minimum value ($-2^{15}$).
 - **Worked Numerical Example:**
   Sequence of incoming metrics: $-50, -20, -80, -10$:
@@ -1235,7 +1235,7 @@ endmodule
 
 ### 13. Two Divisions Generator (TDG) Word Decomposition (Eq. 19)
 
-To overcome the long stream latency of traditional SC ($L=1024$), the **Two Divisions Generator (TDG)** splits an $N$-bit TCS word into coarse ($N_1$-bit) and fine ($N_2$-bit) segments ($N = N_1 + N_2$):
+To overcome the long stream latency of traditional SC ($L=1024$), the **Two Divisions Generator (TDG)** splits an $N$-bit TCS word into coarse ($`N_1`$-bit) and fine ($`N_2`$-bit) segments ($`N = N_1 + N_2`$):
 
 $$
 \boxed{
@@ -1251,11 +1251,11 @@ $$
 ```
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Standard Bernoulli streams require $L = 2^{N}$ cycles to represent an $N$-bit number. For 10-bit numbers, $L = 1024$ cycles, causing unacceptable latency. TDG splits the number into two 5-bit words ($N_1=5, N_2=5$). The coarse word $X_1$ is converted into an $L=32$ stream, while the fine word $X_2$ is scaled by $2^{-N_1} = 1/32$. This compresses the required stream length from $1024$ down to **$64$ cycles** ($16\times$ speedup).
+- **Plain English & Microarchitectural Role:** Standard Bernoulli streams require $L = 2^{N}$ cycles to represent an $N$-bit number. For 10-bit numbers, $L = 1024$ cycles, causing unacceptable latency. TDG splits the number into two 5-bit words ($`N_1=5, N_2=5`$). The coarse word $`X_1`$ is converted into an $L=32$ stream, while the fine word $`X_2`$ is scaled by $`2^{-N_1} = 1/32`$. This compresses the required stream length from $1024$ down to **$64$ cycles** ($16\times$ speedup).
 - **Symbol Dictionary:**
   - $X \in [0, 1.0]$: Full-precision fixed-point value ($N=10$ bits).
-  - $X_1 \in [0, 1.0)$: Coarse most-significant word ($N_1 = 5$ bits).
-  - $X_2 \in [0, 1.0)$: Fine least-significant word ($N_2 = 5$ bits).
+  - $`X_1 \in [0, 1.0)`$: Coarse most-significant word ($`N_1 = 5`$ bits).
+  - $`X_2 \in [0, 1.0)`$: Fine least-significant word ($`N_2 = 5`$ bits).
   - $2^{-N_1} = 2^{-5} = 1/32$: Binary radix weighting factor.
 - **Worked Numerical Example:**
   Let $N=10$ bits (scale factor $1/1024$). Value $X = 0.6875 = 704 / 1024$:
@@ -1285,7 +1285,7 @@ wire [4:0] x2_fine   = x_mag[4:0];
 
 ### 14. TDG Product Expansion (Eq. 20)
 
-Multiplying two TDG-decomposed numbers $X = X_1 + 2^{-N_1}X_2$ and $Y = Y_1 + 2^{-N_1}Y_2$ yields four terms:
+Multiplying two TDG-decomposed numbers $`X = X_1 + 2^{-N_1}X_2`$ and $`Y = Y_1 + 2^{-N_1}Y_2`$ yields four terms:
 
 $$
 \boxed{
@@ -1295,14 +1295,14 @@ X \cdot Y = X_1 Y_1 + 2^{-N_1}(X_1 Y_2 + X_2 Y_1) + 2^{-2N_1} X_2 Y_2
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Expanding the product reveals three significance tiers: (1) dominant coarse product $X_1 Y_1$, (2) first-order cross-terms $2^{-N_1}(X_1 Y_2 + X_2 Y_1)$, and (3) second-order fine product $2^{-2N_1} X_2 Y_2$. In hardware, computing all four terms would require four stochastic multipliers. TDG exploits the fact that the third term is scaled by $2^{-2N_1} = 2^{-10} = 1/1024$, which is negligible compared to receiver quantization noise.
+- **Plain English & Microarchitectural Role:** Expanding the product reveals three significance tiers: (1) dominant coarse product $`X_1 Y_1`$, (2) first-order cross-terms $`2^{-N_1}(X_1 Y_2 + X_2 Y_1)`$, and (3) second-order fine product $`2^{-2N_1} X_2 Y_2`$. In hardware, computing all four terms would require four stochastic multipliers. TDG exploits the fact that the third term is scaled by $`2^{-2N_1} = 2^{-10} = 1/1024`$, which is negligible compared to receiver quantization noise.
 - **Symbol Dictionary:**
-  - $X_1 Y_1$: Coarse-by-coarse product term (weight $1.0$).
-  - $2^{-N_1}(X_1 Y_2 + X_2 Y_1)$: Cross-product terms (weight $2^{-5} = 1/32$).
-  - $2^{-2N_1} X_2 Y_2$: Fine-by-fine product term (weight $2^{-10} = 1/1024$).
+  - $`X_1 Y_1`$: Coarse-by-coarse product term (weight $1.0$).
+  - $`2^{-N_1}(X_1 Y_2 + X_2 Y_1)`$: Cross-product terms (weight $2^{-5} = 1/32$).
+  - $`2^{-2N_1} X_2 Y_2`$: Fine-by-fine product term (weight $2^{-10} = 1/1024$).
 - **Worked Numerical Example:**
-  Let $X_1 = 0.5, X_2 = 0.4, Y_1 = 0.6, Y_2 = 0.8$ with $2^{-N_1} = 1/32$:
-  - Term 1: $X_1 Y_1 = 0.5 \times 0.6 = 0.3000$
+  Let $`X_1 = 0.5, X_2 = 0.4, Y_1 = 0.6, Y_2 = 0.8`$ with $`2^{-N_1} = 1/32`$:
+  - Term 1: $`X_1 Y_1 = 0.5 \times 0.6 = 0.3000`$
   - Term 2: $\frac{1}{32}(0.5 \times 0.8 + 0.4 \times 0.6) = \frac{1}{32}(0.40 + 0.24) = \frac{0.64}{32} = 0.0200$
   - Term 3: $\frac{1}{1024}(0.4 \times 0.8) = \frac{0.32}{1024} = 0.0003125$
   Full sum: $0.3000 + 0.0200 + 0.0003125 = 0.3203125$. Term 3 contributes less than $0.1\%$ of total energy.
@@ -1336,10 +1336,10 @@ X \cdot Y \approx X_1 Y_1 + 2^{-N_1}(X_1 Y_2 + X_2 Y_1)
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Truncating $2^{-2N_1} X_2 Y_2$ eliminates an entire multiplier and avoids double-precision accumulation. In hardware, the accumulator takes coarse stream bits with weight $2^{K}$ and cross-term bits with weight $1$, accumulating them in a single 11-bit counter.
+- **Plain English & Microarchitectural Role:** Truncating $`2^{-2N_1} X_2 Y_2`$ eliminates an entire multiplier and avoids double-precision accumulation. In hardware, the accumulator takes coarse stream bits with weight $2^{K}$ and cross-term bits with weight $1$, accumulating them in a single 11-bit counter.
 - **Symbol Dictionary:**
   - $X \cdot Y \approx \dots$: Truncated multiplication implemented in silicon.
-  - Truncation error: $\epsilon = 2^{-2N_1} X_2 Y_2 \le 2^{-2N_1} = 1/1024$.
+  - Truncation error: $`\epsilon = 2^{-2N_1} X_2 Y_2 \le 2^{-2N_1} = 1/1024`$.
 - **Worked Numerical Example:**
   From previous example: True product $= 0.3203125$. Truncated approximation $= 0.3000 + 0.0200 = 0.3200$.
   Truncation error $\epsilon = 0.0003125$. Absolute relative accuracy is $99.90\%$, well within MIMO channel estimation noise floors.
@@ -1379,7 +1379,7 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Proves mathematically why TDG achieves **39.1 dB SNR** at stream length $L=64$. Truncating the second-order term introduces error variance $\sigma_\epsilon^{2}$ suppressed by $2^{-4N_1} = 2^{-20} \approx 10^{-6}$. This ensures that stochastic precision does not degrade overall MIMO error rates.
+- **Plain English & Microarchitectural Role:** Proves mathematically why TDG achieves **39.1 dB SNR** at stream length $L=64$. Truncating the second-order term introduces error variance $`\sigma_\epsilon^{2}`$ suppressed by $`2^{-4N_1} = 2^{-20} \approx 10^{-6}`$. This ensures that stochastic precision does not degrade overall MIMO error rates.
 - **Symbol Dictionary:**
   - $\sigma_X^{2} = \mathbb{E}[X^{2}]$: Signal power of input operands.
   - $\sigma_{\epsilon}^{2}$: Variance of the truncation error term.
@@ -1409,7 +1409,7 @@ The 11-bit accumulator in [`hdl/tdg_accum.v`](hdl/tdg_accum.v) preserves 39 dB S
 
 ### 1. Fully Parallel 128-Core Frame Balance Condition (Eq. 23, Fig. 6)
 
-The SIM hardware receiver employs $N_d = 128$ fully parallel stochastic detector cores (DET 1 … DET $N_d$) interconnected through a hardwired permutation network to an outer channel decoder of frame length $N_{\mathrm{dec}}$:
+The SIM hardware receiver employs $`N_d = 128`$ fully parallel stochastic detector cores (DET 1 … DET $`N_d`$) interconnected through a hardwired permutation network to an outer channel decoder of frame length $`N_{\mathrm{dec}}`$:
 
 $$
 \boxed{
@@ -1419,14 +1419,14 @@ N_d \cdot N_t \cdot M = N_{\mathrm{dec}}
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** In spatial multiplexing MIMO, each symbol transmission yields $N_t \cdot M$ coded bits ($16$ bits for $4 \times 4$ 16-QAM). To process an entire channel code frame ($N_{\mathrm{dec}} = 2048$ bits) in parallel without stalling or buffering delays, the receiver deploys $N_d = N_{\mathrm{dec}} / (N_t \cdot M)$ identical detector cores. All 128 cores operate concurrently in lockstep.
+- **Plain English & Microarchitectural Role:** In spatial multiplexing MIMO, each symbol transmission yields $`N_t \cdot M`$ coded bits ($16$ bits for $4 \times 4$ 16-QAM). To process an entire channel code frame ($`N_{\mathrm{dec}} = 2048`$ bits) in parallel without stalling or buffering delays, the receiver deploys $`N_d = N_{\mathrm{dec}} / (N_t \cdot M)`$ identical detector cores. All 128 cores operate concurrently in lockstep.
 - **Symbol Dictionary:**
   - $N_d = 128$: Number of parallel stochastic MIMO detector cores in the receiver bank.
   - $N_t = 4$: Number of transmit antennas.
   - $M = 4$: Modulation order bits ($4$ for 16-QAM, $6$ for 64-QAM).
   - $N_{\mathrm{dec}} = 2048$: Codeword block length of the outer turbo decoder.
 - **Worked Numerical Example:**
-  For $N_d = 128$ cores, $N_t = 4$ antennas, and $M = 4$ bits/symbol:
+  For $`N_d = 128`$ cores, $`N_t = 4`$ antennas, and $M = 4$ bits/symbol:
   $$N_{\mathrm{dec}} = 128 \times 4 \times 4 = 2,048\ \text{bits}$$
   A full 2048-bit frame is received and detected across the 128 cores simultaneously.
 
@@ -1444,7 +1444,7 @@ The top-level testbench instantiation array in [`hdl/tb_sim.v`](hdl/tb_sim.v#L10
 
 ### 2. Peak LLR Exchange Throughput Scaling (Eq. 24)
 
-With stream length $L_{\mathrm{stream}} = 64$ and operating frequency $f_{\mathrm{clk}} = 500\,\mathrm{MHz}$, the peak LLR-exchange throughput between detector cores and the channel decoder scales as:
+With stream length $`L_{\mathrm{stream}} = 64`$ and operating frequency $`f_{\mathrm{clk}} = 500\,\mathrm{MHz}`$, the peak LLR-exchange throughput between detector cores and the channel decoder scales as:
 
 $$
 \boxed{
@@ -1460,7 +1460,7 @@ $$
   - $f_{\mathrm{clk}} = 500\,\mathrm{MHz}$: Core operating clock frequency.
   - $L_{\mathrm{stream}} = 64$: TDG stochastic stream length.
 - **Worked Numerical Example:**
-  Substituting $N_d = 128$, $N_t = 4$, $M = 4$, $f_{\mathrm{clk}} = 500\,\mathrm{MHz}$, and $L_{\mathrm{stream}} = 64$:
+  Substituting $`N_d = 128`$, $`N_t = 4`$, $M = 4$, $`f_{\mathrm{clk}} = 500\,\mathrm{MHz}`$, and $`L_{\mathrm{stream}} = 64`$:
   $$\Theta_{\mathrm{LLR}} = \frac{128 \times 4 \times 4 \times 500 \times 10^{6}}{64} = \frac{2048 \times 500 \times 10^{6}}{64} = 32 \times 500 \times 10^{6} = 16.0\,\mathrm{Gbps}$$
   This matches the paper's reported peak LLR exchange bandwidth in Table III.
 
@@ -1480,7 +1480,7 @@ Pipelined streaming outputs in [`hdl/llr_calculator.v`](hdl/llr_calculator.v#L40
 
 Each individual detector core integrates:
 - **$\mathbf{d}^{L}$ Calculator:** Computes global residual $r_k$ via Signed Multiplier (SM) and Saturating Adder (SA) trees.
-- **$\mathbf{d}_{\pm k,b}^{L}$ Calculator:** Applies perturbation difference $\Delta \mathbf{r}_{k,b}$ using residual vector sharing.
+- **$`\mathbf{d}_{\pm k,b}^{L}`$ Calculator:** Applies perturbation difference $`\Delta \mathbf{r}_{k,b}`$ using residual vector sharing.
 - **Bit Mapping:** Gray-coded PAM-4 / PAM-8 constellation level selection.
 - **LLR Calculator:** Dual-hypothesis norm evaluation and max-log metric generation.
 - **FSM Controller:** Orchestrates `S_IDLE`, `S_INIT_RESID`, `S_EVAL_BITS`, `S_UPDATE`, and `S_FINISH`.
@@ -1644,13 +1644,13 @@ endmodule
 
 ### 5. Detailed QAM Constellation & Gray Mapping Architecture (Eq. 11)
 
-In spatial multiplexing MIMO, binary bit vectors $\mathbf{x}_k = [x_{k,1}, \dots, x_{k,M}]^{T}$ map to complex symbols $s_k \in \mathbb{C}$ via Gray coding. The complex symbol decomposes into orthogonal in-phase and quadrature PAM signals:
+In spatial multiplexing MIMO, binary bit vectors $`\mathbf{x}_k = [x_{k,1}, \dots, x_{k,M}]^{T}`$ map to complex symbols $`s_k \in \mathbb{C}`$ via Gray coding. The complex symbol decomposes into orthogonal in-phase and quadrature PAM signals:
 $$s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}}$$
 
 #### 16-QAM Constellation Mapping (4 bits/symbol, $M=4$)
 For unit average symbol energy $\mathbb{E}[|s_k|^{2}] = 1.0$, the PAM-4 normalization factor is $\frac{1}{\sqrt{10}}$:
 
-| Bit Pair $(b_0, b_1)$ | Normalized PAM-4 Amplitude | Stochastic Sign $s(X)$ | Stochastic Magnitude Stream $a(X)$ |
+| Bit Pair $`(b_0, b_1)`$ | Normalized PAM-4 Amplitude | Stochastic Sign $s(X)$ | Stochastic Magnitude Stream $a(X)$ |
 | :---: | :---: | :---: | :---: |
 | **00** | $-3.0 / \sqrt{10}$ | $1$ (Negative) | $1.000$ (All ones stream) |
 | **01** | $-1.0 / \sqrt{10}$ | $1$ (Negative) | $0.333$ (1 in 3 ones) |
@@ -1660,7 +1660,7 @@ For unit average symbol energy $\mathbb{E}[|s_k|^{2}] = 1.0$, the PAM-4 normaliz
 #### 64-QAM Constellation Mapping (6 bits/symbol, $M=6$)
 For unit average symbol energy $\mathbb{E}[|s_k|^{2}] = 1.0$, the PAM-8 normalization factor is $\frac{1}{\sqrt{42}}$:
 
-| Bit Triplet $(b_0, b_1, b_2)$ | Normalized PAM-8 Amplitude | Stochastic Sign $s(X)$ | Discrete MUX Selection Code |
+| Bit Triplet $`(b_0, b_1, b_2)`$ | Normalized PAM-8 Amplitude | Stochastic Sign $s(X)$ | Discrete MUX Selection Code |
 | :---: | :---: | :---: | :---: |
 | **000** | $-7.0 / \sqrt{42}$ | $1$ | 3'b000 |
 | **001** | $-5.0 / \sqrt{42}$ | $1$ | 3'b001 |
@@ -1683,7 +1683,7 @@ To demonstrate the exact mathematical dynamics of the SIM detector, we trace an 
   - $s_2 = \frac{1}{\sqrt{10}}(+1.0 + 3.0j)$
   - $s_3 = \frac{1}{\sqrt{10}}(-1.0 - 1.0j)$
 - **Rayleigh Channel Matrix $\mathbf{H}$ (Real Equivalent $8 \times 8$):** Condition number $\kappa(\mathbf{H}) = 3.42$.
-- **Received Signal:** $\mathbf{y} = \mathbf{Hs} + \mathbf{n}$ at $E_b/N_0 = 15.0\,\mathrm{dB}$.
+- **Received Signal:** $\mathbf{y} = \mathbf{Hs} + \mathbf{n}$ at $`E_b/N_0 = 15.0\,\mathrm{dB}`$.
 
 #### Step-by-Step Gibbs Execution Trace:
 1. **Initial MMSE Filter:** Computes initial belief vector $\hat{\mathbf{s}}_{\mathrm{MMSE}} = (\mathbf{H}^{H}\mathbf{H} + \sigma^{2} \mathbf{I})^{-1}\mathbf{H}^{H} \mathbf{y}$.
@@ -1729,7 +1729,7 @@ Figure 10 evaluates coded $4 \times 4$ 16-QAM and 64-QAM over Rayleigh fading wi
 
 ![Fig 2 FER Performance](docs/figures/fig2_fer_performance.png)
 
-- **Headline Milestone:** At $E_b/N_0 = 4.25\,\mathrm{dB}$, the proposed SIM detector achieves $\mathbf{\mathrm{FER} = 10^{-4}}$, matching traditional iterative MIMO detection with 4 outer iterations while operating at **787.5 Mbps**.
+- **Headline Milestone:** At $`E_b/N_0 = 4.25\,\mathrm{dB}`$, the proposed SIM detector achieves $\mathbf{\mathrm{FER} = 10^{-4}}$, matching traditional iterative MIMO detection with 4 outer iterations while operating at **787.5 Mbps**.
 
 ---
 
@@ -1739,7 +1739,7 @@ Figure 9 presents the distribution of iteration counts required for convergence 
 
 ![Fig 4 Iterations Histogram](docs/figures/fig4_iterations_hist.png)
 
-- At $E_b/N_0 = 5.0\,\mathrm{dB}$, over **75% of frames converge in $\le 8$ iterations**, demonstrating that GsUD decoder coupling rapidly pulls the Gibbs sampler into the correct constellation decision region.
+- At $`E_b/N_0 = 5.0\,\mathrm{dB}`$, over **75% of frames converge in $\le 8$ iterations**, demonstrating that GsUD decoder coupling rapidly pulls the Gibbs sampler into the correct constellation decision region.
 
 ---
 
@@ -1828,7 +1828,7 @@ Execution of [`sim/run_tests.py`](sim/run_tests.py) confirms:
 
 1. **Decoder Feedback Resolves MCMC Stalling:** Uncoded Gibbs sampling often stalls in local minima when constellation order is high ($M \ge 4$). Coupling the decoder directly into the Gibbs update chain (GsUD) leverages channel coding redundancy to rapidly guide the sampler to the global minimum.
 2. **Intermediate Sharing Slashes Hardware Complexity:** Tracking $\mathbf{r} = \mathbf{y} - \mathbf{Hs}$ reduces single-bit hypothesis evaluations to an inner product $\mathbf{r}^{H} \Delta\mathbf{r}$, which maps directly onto stochastic dot-product gates without matrix multipliers.
-3. **TDG Solves Stochastic Computing's Latency Dilemma:** By splitting numbers into coarse and fine streams ($X = X_1 + 2^{-N_1} X_2$), TDG achieves 39.1 dB SNR at $L=64$, delivering **$16\times$ stream length reduction** compared to traditional Bernoulli bit-streams.
+3. **TDG Solves Stochastic Computing's Latency Dilemma:** By splitting numbers into coarse and fine streams ($`X = X_1 + 2^{-N_1} X_2`$), TDG achieves 39.1 dB SNR at $L=64$, delivering **$16\times$ stream length reduction** compared to traditional Bernoulli bit-streams.
 
 ---
 
