@@ -250,18 +250,9 @@ $$
 
 where the constituent vectors concatenate in-phase and quadrature components:
 
-- **Received Real Vector ($2N_r \times 1$):**
-  $$
-  \mathbf{y}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{y})^T, \; \mathrm{Im}(\mathbf{y})^T]^T \in \mathbb{R}^{2N_r}
-  $$
-- **Transmit Real Vector ($2N_t \times 1$):**
-  $$
-  \mathbf{s}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{s})^T, \; \mathrm{Im}(\mathbf{s})^T]^T \in \mathbb{R}^{2N_t}
-  $$
-- **Real Noise Vector ($2N_r \times 1$):**
-  $$
-  \mathbf{n}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{n})^T, \; \mathrm{Im}(\mathbf{n})^T]^T \in \mathbb{R}^{2N_r}
-  $$
+- **Received Real Vector (2Nr × 1):** $\mathbf{y}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{y})^T, \; \mathrm{Im}(\mathbf{y})^T]^T \in \mathbb{R}^{2N_r}$
+- **Transmit Real Vector (2Nt × 1):** $\mathbf{s}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{s})^T, \; \mathrm{Im}(\mathbf{s})^T]^T \in \mathbb{R}^{2N_t}$
+- **Real Noise Vector (2Nr × 1):** $\mathbf{n}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{n})^T, \; \mathrm{Im}(\mathbf{n})^T]^T \in \mathbb{R}^{2N_r}$
 
 The real-equivalent channel matrix is partitioned into four real $N_r \times N_t$ sub-matrices:
 
@@ -288,13 +279,8 @@ $$
 \mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}
 $$
 
-  where:
-  - Transmit vector: $\mathbf{s}_{\mathbb{R}} = [0.7071, \; 0.7071]^T$
-  - AWGN noise vector: $\mathbf{n}_{\mathbb{R}} = [0.05, \; 0.02]^T$
-  - Channel matrix:
-    $$
-    \mathbf{H}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix}
-    $$
+  where $\mathbf{s}_{\mathbb{R}} = [0.7071, \; 0.7071]^T$, $\mathbf{n}_{\mathbb{R}} = [0.05, \; 0.02]^T$, and channel matrix:
+  $$\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix}$$
 
   Computing the matrix-vector product row by row:
   - **In-Phase Output (Real Component):**
