@@ -283,15 +283,15 @@ $$
   - Transmit vector: $\mathbf{s}_{\mathbb{R}} = [0.7071, \; 0.7071]^T$
   - AWGN noise: $\mathbf{n}_{\mathbb{R}} = [0.05, \; 0.02]^T$
   - Real channel matrix:
-  $$\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix}$$
+
+$$
+\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix}
+$$
 
   Computing the matrix-vector product row by row:
-  - **In-Phase Output (Real Component):**
-    $$y_{\mathbb{R},0} = (0.6)(0.7071) + (0.8)(0.7071) + 0.05 = 0.4243 + 0.5657 + 0.05 = 1.0399$$
-  - **Quadrature Output (Imaginary Component):**
-    $$y_{\mathbb{R},1} = (-0.8)(0.7071) + (0.6)(0.7071) + 0.02 = -0.5657 + 0.4243 + 0.02 = -0.1214$$
-  - **Equivalent Real Vector:**
-    $$\mathbf{y}_{\mathbb{R}} = [1.0399, \; -0.1214]^T$$
+  - **In-Phase Output (Real Component):** $y_{\mathbb{R},0} = (0.6)(0.7071) + (0.8)(0.7071) + 0.05 = 0.4243 + 0.5657 + 0.05 = 1.0399$
+  - **Quadrature Output (Imaginary Component):** $y_{\mathbb{R},1} = (-0.8)(0.7071) + (0.6)(0.7071) + 0.02 = -0.5657 + 0.4243 + 0.02 = -0.1214$
+  - **Equivalent Real Vector:** $\mathbf{y}_{\mathbb{R}} = [1.0399, \; -0.1214]^T$
 
   Both models yield identical received signals to 4 decimal places.
 
@@ -1121,9 +1121,7 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Evaluating the squared norm $\|\mathbf{y} - \mathbf{Hs}\|^{2}$ usually requires 8 squarings and additions. With Eq. (17), since $\|\mathbf{r}\|^{2}$ and perturbation norms are pre-computed and stored in registers, evaluating each candidate requires **only one inner product**:
-  $$\mathbf{r}^{H} \Delta \mathbf{r}_{k,b} = \sum_{i=1}^{2N_r} r_i \cdot \Delta r_i$$
-  In stochastic computing, an inner product maps directly to parallel signed multipliers and saturating adder trees.
+- **Plain English & Microarchitectural Role:** Evaluating the squared norm $\|\mathbf{y} - \mathbf{Hs}\|^{2}$ usually requires 8 squarings and additions. With Eq. (17), since $\|\mathbf{r}\|^{2}$ and perturbation norms are pre-computed and stored in registers, evaluating each candidate requires **only one inner product** between residual and perturbation vectors. In stochastic computing, an inner product maps directly to parallel signed multipliers and saturating adder trees.
 - **Symbol Dictionary:**
   - $\|\mathbf{r}\|^{2} \in \mathbb{R}^{+}$: Pre-computed squared norm of current residual.
   - $\|\Delta\mathbf{r}_{k,b}\|^{2} \in \mathbb{R}^{+}$: Pre-computed squared norm of perturbation vector.
@@ -1635,8 +1633,11 @@ endmodule
 
 ### 5. Detailed QAM Constellation & Gray Mapping Architecture (Eq. 11)
 
-In spatial multiplexing MIMO, binary bit vectors $\mathbf{x}_k \in \{0, 1\}^{M}$ map to complex symbols $s_k \in \mathbb{C}$ via Gray coding. The complex symbol decomposes into orthogonal in-phase and quadrature PAM signals:
-$$s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}}$$
+In spatial multiplexing MIMO, binary bit vector $\mathbf{x} \in \{0, 1\}^{M}$ maps to complex constellation symbol $s \in \mathbb{C}$ via Gray coding. The complex symbol decomposes into orthogonal in-phase and quadrature PAM signals:
+
+$$
+s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}}
+$$
 
 #### 16-QAM Constellation Mapping (4 bits/symbol, $M=4$)
 For unit average symbol energy $\mathbb{E}[|s_k|^{2}] = 1.0$, the PAM-4 normalization factor is $\frac{1}{\sqrt{10}}$:
@@ -1699,7 +1700,10 @@ To demonstrate the exact mathematical dynamics of the SIM detector, we trace an 
 ### 1. Multiplier Precision & SNR Benchmark (Table II Replication, Fig. 1)
 
 Multiplier SNR is defined in Table II as:
-$$\mathrm{SNR} = 10 \log_{10} \frac{\sum (\mathrm{Test\_Result})^{2}}{\sum (\mathrm{Float\_Point} - \mathrm{Test\_Result})^{2}}$$
+
+$$
+\mathrm{SNR} = 10 \log_{10} \frac{\sum (\mathrm{Test\_Result})^{2}}{\sum (\mathrm{Float\_Point} - \mathrm{Test\_Result})^{2}}
+$$
 
 ![Fig 1 Multiplier SNR](docs/figures/fig1_mul_snr.png)
 
