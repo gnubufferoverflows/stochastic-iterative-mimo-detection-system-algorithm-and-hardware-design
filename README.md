@@ -236,39 +236,48 @@ projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-desig
 
 ### 1. Spatial-Multiplexing MIMO Channel Model (Eqs. 1, 1b)
 
-In a spatial-multiplexing MIMO wireless transmission system with $N_t$ transmit antennas and $N_r$ receive antennas ($N_r \ge N_t$), the baseband complex received vector $\mathbf{y} \in \mathbb{C}^{N_r}$ is modeled as:
+In a spatial-multiplexing MIMO wireless transmission system with $`N_t`$ transmit antennas and $`N_r`$ receive antennas ($`N_r \ge N_t`$), the baseband complex received vector $`\mathbf{y} \in \mathbb{C}^{N_r}`$ is modeled as:
 
 $$
 \boxed{\mathbf{y} = \mathbf{H}\mathbf{s} + \mathbf{n}} \qquad \text{(1)}
 $$
 
-For hardware realization without complex multipliers, the system is decomposed into an equivalent real-valued representation of doubled dimension ($2N_r \times 2N_t$):
+For hardware realization without complex multipliers, the system is decomposed into an equivalent real-valued representation of doubled dimension ($`2N_r \times 2N_t`$):
 
 $$
 \boxed{\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}} \qquad \text{(1b)}
 $$
 
-where the $2N_r \times 1$ real received vector $\mathbf{y}_{\mathbb{R}}$, $2N_t \times 1$ transmit vector $\mathbf{s}_{\mathbb{R}}$, and $2N_r \times 1$ noise vector $\mathbf{n}_{\mathbb{R}}$ concatenate in-phase and quadrature components:
+where the constituent vectors concatenate in-phase and quadrature components:
 
-- **Received Real Vector:** $\mathbf{y}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{y})^T, \; \mathrm{Im}(\mathbf{y})^T]^T \in \mathbb{R}^{2N_r}$
-- **Transmit Real Vector:** $\mathbf{s}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{s})^T, \; \mathrm{Im}(\mathbf{s})^T]^T \in \mathbb{R}^{2N_t}$
-- **Real Noise Vector:** $\mathbf{n}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{n})^T, \; \mathrm{Im}(\mathbf{n})^T]^T \in \mathbb{R}^{2N_r}$
+- **Received Real Vector ($`2N_r \times 1`$):**
+  $$
+  \mathbf{y}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{y})^T, \; \mathrm{Im}(\mathbf{y})^T]^T \in \mathbb{R}^{2N_r}
+  $$
+- **Transmit Real Vector ($`2N_t \times 1`$):**
+  $$
+  \mathbf{s}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{s})^T, \; \mathrm{Im}(\mathbf{s})^T]^T \in \mathbb{R}^{2N_t}
+  $$
+- **Real Noise Vector ($`2N_r \times 1`$):**
+  $$
+  \mathbf{n}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{n})^T, \; \mathrm{Im}(\mathbf{n})^T]^T \in \mathbb{R}^{2N_r}
+  $$
 
-and the $2N_r \times 2N_t$ real-equivalent channel matrix $\mathbf{H}_{\mathbb{R}}$ is partitioned into four real $N_r \times N_t$ sub-matrices:
+The real-equivalent channel matrix is partitioned into four real $`N_r \times N_t`$ sub-matrices:
 
 $$
 \mathbf{H}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\\\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix} \in \mathbb{R}^{2N_r \times 2N_t}
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Spatial multiplexing transmits independent data streams simultaneously across $N_t$ antennas over the same frequency band. Multipath propagation mixes these streams at $N_r$ receive antennas, corrupted by AWGN. In hardware, complex multipliers consume $3\times$ to $4\times$ more area than real multipliers. Converting Eq. (1) into Eq. (1b) doubles the vector length from 4 to 8, allowing the detector datapath to operate entirely on real-valued signed fixed-point numbers.
+- **Plain English & Microarchitectural Role:** Spatial multiplexing transmits independent data streams simultaneously across $`N_t`$ antennas over the same frequency band. Multipath propagation mixes these streams at $`N_r`$ receive antennas, corrupted by AWGN. In hardware, complex multipliers consume $3\times$ to $4\times$ more area than real multipliers. Converting Eq. (1) into Eq. (1b) doubles the vector length from 4 to 8, allowing the detector datapath to operate entirely on real-valued signed fixed-point numbers.
 - **Symbol Dictionary:**
-  - $\mathbf{y} \in \mathbb{C}^{N_r}$: Baseband complex received signal vector ($N_r=4$ antennas).
-  - $\mathbf{H} \in \mathbb{C}^{N_r \times N_t}$: Flat-fading Rayleigh channel matrix where $H_{i,j} \sim \mathcal{CN}(0, 1) = \frac{1}{\sqrt{2}}(\mathcal{N}(0, 1) + j \mathcal{N}(0, 1))$.
-  - $\mathbf{s} \in \mathcal{S}^{N_t}$: Complex transmit symbol vector from a $2^{M}$-QAM constellation with unit average energy $\mathbb{E}[|s_k|^{2}] = 1.0$.
-  - $\mathbf{n} \in \mathbb{C}^{N_r}$: Complex AWGN vector with covariance $\mathbb{E}[\mathbf{n}\mathbf{n}^{H}] = \sigma^{2} \mathbf{I}_{N_r}$, where $\sigma^{2} = N_0$.
-  - $\mathbf{y}_{\mathbb{R}} \in \mathbb{R}^{2N_r}$: Doubled-dimension real received vector ($8 \times 1$). Stored in signed 16-bit registers (`reg signed [15:0] reg_y [0:7]`).
-  - $\mathbf{H}_{\mathbb{R}} \in \mathbb{R}^{2N_r \times 2N_t}$: Doubled-dimension real channel matrix ($8 \times 8$). Stored in signed 16-bit registers (`reg signed [15:0] reg_H [0:7][0:7]`).
+  - $`\mathbf{y} \in \mathbb{C}^{N_r}`$: Baseband complex received signal vector ($N_r = 4$ antennas).
+  - $`\mathbf{H} \in \mathbb{C}^{N_r \times N_t}`$: Flat-fading Rayleigh channel matrix where $`H_{i,j} \sim \mathcal{CN}(0, 1) = \frac{1}{\sqrt{2}}(\mathcal{N}(0, 1) + j \mathcal{N}(0, 1))`$.
+  - $`\mathbf{s} \in \mathcal{S}^{N_t}`$: Complex transmit symbol vector from a $2^{M}$-QAM constellation with unit average energy $\mathbb{E}[|s_k|^{2}] = 1.0$.
+  - $`\mathbf{n} \in \mathbb{C}^{N_r}`$: Complex AWGN vector with covariance $`\mathbb{E}[\mathbf{n}\mathbf{n}^{H}] = \sigma^{2} \mathbf{I}_{N_r}`$, where $\sigma^{2} = N_0$.
+  - $`\mathbf{y}_{\mathbb{R}} \in \mathbb{R}^{2N_r}`$: Doubled-dimension real received vector ($8 \times 1$). Stored in signed 16-bit registers (`reg signed [15:0] reg_y [0:7]`).
+  - $`\mathbf{H}_{\mathbb{R}} \in \mathbb{R}^{2N_r \times 2N_t}`$: Doubled-dimension real channel matrix ($8 \times 8$). Stored in signed 16-bit registers (`reg signed [15:0] reg_H [0:7][0:7]`).
 - **Worked Numerical Example:**
   Consider a $1 \times 1$ sub-channel with $s = \frac{1}{\sqrt{2}}(1 + j)$, $H = 0.6 - 0.8j$, and noise $n = 0.05 + 0.02j$:
   $$\mathbf{H}\mathbf{s} = (0.6 - 0.8j)\frac{1+j}{\sqrt{2}} = \frac{(0.6+0.8) + j(0.6-0.8)}{\sqrt{2}} = \frac{1.4 - 0.2j}{\sqrt{2}} \approx 0.9899 - 0.1414j$$
