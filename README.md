@@ -23,7 +23,7 @@ An independent reproduction, mathematical derivation, circuit architecture walkt
 > ### Research Disclaimer & LLM Attribution
 > This repository contains open-source academic research implementations, circuit models, and verification frameworks for **Stochastic Computing (SC)** and **Markov Chain Monte Carlo (MCMC)** iterative MIMO soft detection accelerators.
 >
-> - **LLM-Assisted Engineering**: Algorithmic Python models ($4 \times 4$ 16-QAM and 64-QAM), Two Divisions Generator (TDG) short-stream multipliers, synthesizable Verilog RTL modules, cycle-accurate Icarus Verilog testbenches, and FreePDK45 physical synthesis flows were engineered with LLM assistance in collaboration with domain researchers.
+> - **LLM-Assisted Engineering**: Algorithmic Python models (4×4 16-QAM and 64-QAM), Two Divisions Generator (TDG) short-stream multipliers, synthesizable Verilog RTL modules, cycle-accurate Icarus Verilog testbenches, and FreePDK45 physical synthesis flows were engineered with LLM assistance in collaboration with domain researchers.
 > - **Academic & Research Software**: Provided strictly for academic study, research reproducibility, educational exploration, and EDA prototyping. It is **not** certified for commercial physical tape-outs without independent domain engineering validation.
 > - **PDK & Technology Comparisons**: While the original paper implemented a 128-parallel ASIC case study on **SMIC/TSMC 130 nm** (cell library `cb13fs120_tsmc`, 1.2 V core), our physical gate-level synthesis numbers are measured using **Yosys + OpenSTA** targeting the open-source **FreePDK45 / NanGate Open Cell Library (45 nm, 1.1 V, typical corner)**.
 
@@ -69,11 +69,11 @@ An independent reproduction, mathematical derivation, circuit architecture walkt
   - [6. Worked Numerical Example: Tracing a 4x4 16-QAM Transmission Frame](#6-worked-numerical-example-tracing-a-4x4-16-qam-transmission-frame)
 - [Empirical Benchmarks & Experimental Results](#empirical-benchmarks--experimental-results)
   - [1. Multiplier Precision & SNR Benchmark (Table II Replication, Fig. 1)](#1-multiplier-precision--snr-benchmark-table-ii-replication-fig-1)
-  - [2. Coded $4 \times 4$ MIMO FER Performance (Fig. 10 Replication, Fig. 2)](#2-coded-4-times-4-mimo-fer-performance-fig-10-replication-fig-2)
+  - [2. Coded 4×4 MIMO FER Performance (Fig. 10 Replication, Fig. 2)](#2-coded-44-mimo-fer-performance-fig-10-replication-fig-2)
   - [3. Convergence Iterations Histogram (Fig. 9 Replication, Fig. 4)](#3-convergence-iterations-histogram-fig-9-replication-fig-4)
   - [4. BER Convergence vs. Inner & Outer Iterations (Fig. 11 Replication, Fig. 5)](#4-ber-convergence-vs-inner--outer-iterations-fig-11-replication-fig-5)
   - [5. Post-Layout ASIC Implementation (Table III Replication)](#5-post-layout-asic-implementation-table-iii-replication)
-  - [6. SOTA Comparison for $4 \times 4$ MIMO Detectors (Table IV Replication, Fig. 6)](#6-sota-comparison-for-4-times-4-mimo-detectors-table-iv-replication-fig-6)
+  - [6. SOTA Comparison for 4×4 MIMO Detectors (Table IV Replication, Fig. 6)](#6-sota-comparison-for-44-mimo-detectors-table-iv-replication-fig-6)
 - [Silicon PPA & FreePDK45 Synthesis Results (Fig. 3)](#silicon-ppa--freepdk45-synthesis-results-fig-3)
 - [Verification Suite & Triple-Engine Parity Check](#verification-suite--triple-engine-parity-check)
 - [Key Insights & Microarchitectural Takeaways](#key-insights--microarchitectural-takeaways)
@@ -85,13 +85,13 @@ An independent reproduction, mathematical derivation, circuit architecture walkt
 ## Executive Summary
 
 Multiple-Input Multiple-Output (MIMO) spatial multiplexing is fundamental to modern wireless standards (5G-NR, Wi-Fi 6/7). However, soft-output MIMO detection requires evaluating log-likelihood ratios (LLRs) over a candidate space that scales exponentially ($2^{N_t M}$) with the number of transmit antennas $N_t$ and modulation order $M$. Traditional approaches face prohibitive bottlenecks:
-- **Exhaustive Max-Log / List Sphere Detection (LSD):** Explodes in computational complexity and silicon area for $4 \times 4$ 16-QAM ($2^{16} = 65,536$ points) and 64-QAM ($2^{24} = 16,777,216$ points).
+- **Exhaustive Max-Log / List Sphere Detection (LSD):** Explodes in computational complexity and silicon area for 4×4 16-QAM ($2^{16} = 65,536$ points) and 64-QAM ($2^{24} = 16,777,216$ points).
 - **Conventional MCMC Detectors:** Suffer from slow convergence and stalling in local minima because the detector's Gibbs sampler runs independently without direct feedback from the channel decoder.
 - **Serial Iterative Receivers:** Delay channel decoding until the detector finishes its inner iterations, resulting in high latency and low hardware utilization.
 
 In their seminal TCAS-I 2015 paper, **Chen, Hu, and Sobelman** introduced **Stochastic Iterative MIMO (SIM)**, delivering three breakthrough innovations:
 1. **Decoder-Driven Gibbs Sampling (GsUD):** Instead of sampling solely from internal conditional detector probabilities, the Gibbs sampler is directly refreshed by hard/soft decoded bits from the channel decoder. The decoder becomes an intrinsic component of the Gibbs update chain, drastically accelerating convergence to the optimal lattice vector.
-2. **Intermediate Residual Vector Sharing:** By tracking $\mathbf{r} = \mathbf{y} - \mathbf{Hs}$ and computing perturbation vectors $\Delta \mathbf{r}_{k,b} = \mathbf{H}_{:,k}(s_k^{+} - s_k^{-})$, the norm computation for each single-bit flip is reduced from a matrix-vector product to a single inner product:
+2. **Intermediate Residual Vector Sharing:** By tracking the residual vector $\mathbf{r} = \mathbf{y} - \mathbf{Hs}$ and evaluating single-column perturbation vectors, the norm computation for each single-bit flip is reduced from a matrix-vector product to a single inner product:
 
 $$
 \boxed{
@@ -156,7 +156,7 @@ python3 tools/freepdk45/run_synth.py --project projects/stochastic-iterative-mim
 
 | Paper Section & Topic | Landmark Equation / Concept | Python Algorithmic Model | Synthesizable Verilog RTL | Verification & Testbench | Microarchitectural Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Sec. II-A: Channel Model** | $\boxed{\mathbf{y} = \mathbf{Hs} + \mathbf{n}}$ (Eq. 1) / $\boxed{\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}}$ (Eq. 1b) | [`generate_channel`, `complex_to_real_mimo`](src/mimo_channel.py#L11-L40) | Handled in testbench / system top | [`sim/run_tests.py`](sim/run_tests.py#L80-L95) | $4 \times 4$ Rayleigh flat-fading; real equivalent $8 \times 8$ real matrix. |
+| **Sec. II-A: Channel Model** | Complex Model (Eq. 1) / Real-Valued Model (Eq. 1b) | [`generate_channel`, `complex_to_real_mimo`](src/mimo_channel.py#L11-L40) | Handled in testbench / system top | [`sim/run_tests.py`](sim/run_tests.py#L80-L95) | $4 \times 4$ Rayleigh flat-fading; real equivalent $8 \times 8$ real matrix. |
 | **Sec. II-A: Soft LLR** | $\boxed{\lambda(x_{k,b}) = \ln \frac{P(x_{k,b}=+1)}{P(x_{k,b}=-1)}}$ (Eq. 2) | [`maxlog_llr_qam`](src/sim_mimo.py#L50-L115) | [`llr_calculator.v`](hdl/llr_calculator.v#L35-L45) | [`sim/run_tests.py`](sim/run_tests.py) | Max-log approximation evaluated via stochastic norm streams. |
 | **Sec. II-A: Direct MAP** | $2^{N_t M - 1}$ sum (Eq. 3) | [`maxlog_llr_qam`](src/sim_mimo.py) | Exponential cost avoided by SIM | Analysis reference | Direct evaluation prohibitive for high-order constellations. |
 | **Sec. II-A: Gibbs Sampling** | $\boxed{P(x_{k,b}=+1) = \frac{1}{1+e^{-\lambda}}}$ (Eq. 4) | [`sim_mimo_detect`](src/sim_mimo.py#L145-L160) | [`sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v#L125-L135) | [`hdl/tb_sim.v`](hdl/tb_sim.v) | Bernoulli trial updates single bit conditioning on current state. |
@@ -279,7 +279,10 @@ $$
 \mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}
 $$
 
-  where $\mathbf{s}_{\mathbb{R}} = [0.7071, \; 0.7071]^T$, $\mathbf{n}_{\mathbb{R}} = [0.05, \; 0.02]^T$, and channel matrix:
+  with real inputs:
+  - Transmit vector: $\mathbf{s}_{\mathbb{R}} = [0.7071, \; 0.7071]^T$
+  - AWGN noise: $\mathbf{n}_{\mathbb{R}} = [0.05, \; 0.02]^T$
+  - Real channel matrix:
   $$\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix}$$
 
   Computing the matrix-vector product row by row:
@@ -900,7 +903,7 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** Maps binary bits to in-phase (I) and quadrature (Q) pulse amplitude modulation (PAM) levels using Gray coding so adjacent constellation points differ by exactly one bit. In hardware, this is implemented as small 4:1 multiplexers for 16-QAM or 8:1 multiplexers for 64-QAM, producing normalized fixed-point symbol coordinates.
 - **Symbol Dictionary:**
-  - $\mathbf{x}_k = [x_{k,0}, \dots, x_{k,M-1}]^{T}$: Binary bit vector of length $M$ ($M=4$ for 16-QAM, $M=6$ for 64-QAM).
+  - $\mathbf{x}_k \in \{0, 1\}^{M}$: Binary bit vector of length $M$ ($M=4$ for 16-QAM, $M=6$ for 64-QAM).
   - $s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}} \in \mathbb{C}$: Complex constellation symbol.
   - $\mathrm{map}(\cdot)$: Gray-coded constellation mapper function.
 - **Worked Numerical Example:**
@@ -956,7 +959,7 @@ $$
 #### Four-Element Pedagogy:
 - **Plain English & Microarchitectural Role:** Equations (12) and (13) compute updated conditional log metrics centered around the decoder's revised belief. Unlike the warm-up phase where the trajectory was uncertain, the Gibbs state is now anchored near the true transmit vector, allowing refined metric estimation.
 - **Symbol Dictionary:**
-  - $\mathbf{s}_{(\hat{x}_{k,b}^{\mathrm{dec}}=\pm 1)}$: Symbol vector formed by forcing bit $x_{k,b}$ to $\pm 1$ while holding all other bits at their decoder-updated values.
+  - $\mathbf{s}^{\pm}$: Symbol vector formed by forcing bit $x_{k,b}$ to $\pm 1$ while holding all other bits at their decoder-updated values.
   - $\lambda_a(x_{k,b} = \pm 1)$: A-priori information from the decoder.
 - **Worked Numerical Example:**
   After decoder correction, the residual norm shrinks from $0.35$ to $0.04$. At $\sigma^{2} = 0.10$:
@@ -1118,11 +1121,13 @@ $$
 $$
 
 #### Four-Element Pedagogy:
-- **Plain English & Microarchitectural Role:** Evaluating the squared norm $\|\mathbf{y} - \mathbf{Hs}\|^{2}$ usually requires $2N_r$ squarings and additions ($8$ squarings). With Eq. (17), since $\|\mathbf{r}\|^{2}$ and $\|\Delta\mathbf{r}_{k,b}\|^{2}$ are pre-computed and stored in registers, evaluating each candidate requires **only one inner product** $\mathbf{r}^{H} \Delta \mathbf{r}_{k,b}$. In stochastic computing, an inner product maps directly to parallel signed multipliers and saturating adder trees.
+- **Plain English & Microarchitectural Role:** Evaluating the squared norm $\|\mathbf{y} - \mathbf{Hs}\|^{2}$ usually requires 8 squarings and additions. With Eq. (17), since $\|\mathbf{r}\|^{2}$ and perturbation norms are pre-computed and stored in registers, evaluating each candidate requires **only one inner product**:
+  $$\mathbf{r}^{H} \Delta \mathbf{r}_{k,b} = \sum_{i=1}^{2N_r} r_i \cdot \Delta r_i$$
+  In stochastic computing, an inner product maps directly to parallel signed multipliers and saturating adder trees.
 - **Symbol Dictionary:**
   - $\|\mathbf{r}\|^{2} \in \mathbb{R}^{+}$: Pre-computed squared norm of current residual.
   - $\|\Delta\mathbf{r}_{k,b}\|^{2} \in \mathbb{R}^{+}$: Pre-computed squared norm of perturbation vector.
-  - $\mathbf{r}^{H} \Delta\mathbf{r}_{k,b} = \sum_{i=1}^{2N_r} r_i \cdot \Delta r_i \in \mathbb{R}$: Real inner product.
+  - $\mathbf{r}^{H} \Delta\mathbf{r}_{k,b} \in \mathbb{R}$: Real inner product evaluated by the dot-product unit.
 - **Worked Numerical Example:**
   Suppose $\|\mathbf{r}\|^{2} = 0.050$, $\|\Delta\mathbf{r}\|^{2} = 0.200$, and inner product $\mathbf{r}^{T} \Delta\mathbf{r} = -0.040$:
   $$\|\mathbf{r} + \Delta\mathbf{r}\|^{2} = 0.050 + 2(-0.040) + 0.200 = 0.050 - 0.080 + 0.200 = 0.1700$$
@@ -1630,7 +1635,7 @@ endmodule
 
 ### 5. Detailed QAM Constellation & Gray Mapping Architecture (Eq. 11)
 
-In spatial multiplexing MIMO, binary bit vectors $\mathbf{x}_k = [x_{k,1}, \dots, x_{k,M}]^{T}$ map to complex symbols $s_k \in \mathbb{C}$ via Gray coding. The complex symbol decomposes into orthogonal in-phase and quadrature PAM signals:
+In spatial multiplexing MIMO, binary bit vectors $\mathbf{x}_k \in \{0, 1\}^{M}$ map to complex symbols $s_k \in \mathbb{C}$ via Gray coding. The complex symbol decomposes into orthogonal in-phase and quadrature PAM signals:
 $$s_k = s_{k,\mathrm{re}} + j \cdot s_{k,\mathrm{im}}$$
 
 #### 16-QAM Constellation Mapping (4 bits/symbol, $M=4$)
@@ -1709,7 +1714,7 @@ $$\mathrm{SNR} = 10 \log_{10} \frac{\sum (\mathrm{Test\_Result})^{2}}{\sum (\mat
 
 ---
 
-### 2. Coded $4 \times 4$ MIMO FER Performance (Fig. 10 Replication, Fig. 2)
+### 2. Coded 4×4 MIMO FER Performance (Fig. 10 Replication, Fig. 2)
 
 Figure 10 evaluates coded $4 \times 4$ 16-QAM and 64-QAM over Rayleigh fading with rate-1/2 length-1024 turbo decoding.
 
@@ -1757,11 +1762,11 @@ Figure 11 sweeps inner Gibbs updates (2, 4, 8) across 1 to 12 outer iterations:
 
 ---
 
-### 6. SOTA Comparison for $4 \times 4$ MIMO Detectors (Table IV Replication, Fig. 6)
+### 6. SOTA Comparison for 4×4 MIMO Detectors (Table IV Replication, Fig. 6)
 
 ![Fig 6 Throughput Comparison](docs/figures/fig6_throughput_comparison.png)
 
-#### Table IV: Comparison Across $4 \times 4$ MIMO Soft Detectors (Decoder Excluded)
+#### Table IV: Comparison Across 4×4 MIMO Soft Detectors (Decoder Excluded)
 | Metric | This Work (SIM) | [6] PPTS ($L=2$) | [8] SISO MMSE-PIC | [14] MCMC Bitwise | [23] Stochastic MCMC | [26] Soft STS | [28] FSD |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Implementation** | Post-Layout | Post-Synth | Measured | Post-Synth | Post-Synth | Post-Layout | Post-Layout |
