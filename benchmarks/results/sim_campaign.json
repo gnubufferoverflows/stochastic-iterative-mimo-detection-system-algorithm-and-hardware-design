@@ -2,12 +2,12 @@
   "paper_doi": "10.1109/TCSI.2015.2390558",
   "note": "Measured TDG/DSC/random mul SNR and 2x2 BPSK SIM BER. Tables III\u2013IV 130 nm ASIC and 4x4 16-QAM FER are REFERENCE ONLY.",
   "mul_snr_db": {
-    "random_1024": 20.31032024388718,
-    "dsc_1024": 55.78850294479572,
-    "dsc_64": 32.27639000948529,
-    "tdg_exact_k5": 58.57490636914819,
-    "tdg_stream_k5": 58.57490636914819,
-    "random_64": 8.080965528681268
+    "random_1024": 20.37307597563903,
+    "dsc_1024": 24.46944752801538,
+    "dsc_64": 8.19638851806936,
+    "tdg_exact_k5": 53.16941006353689,
+    "tdg_stream_k5": 53.16941006353689,
+    "random_64": 8.844966953220828
   },
   "paper_table2_reference_db": {
     "random_1024": 43.0,
@@ -18,23 +18,23 @@
   },
   "ber_2x2_bpsk": [
     {
-      "snr_db": 0,
-      "ber_sim": 0.25166666666666665,
+      "snr_db": 0.0,
+      "ber_sim": 0.24333333333333335,
       "ber_zf": 0.30666666666666664
     },
     {
-      "snr_db": 4,
-      "ber_sim": 0.21833333333333332,
+      "snr_db": 4.0,
+      "ber_sim": 0.18666666666666668,
       "ber_zf": 0.26
     },
     {
-      "snr_db": 8,
+      "snr_db": 8.0,
       "ber_sim": 0.12333333333333334,
       "ber_zf": 0.17666666666666667
     },
     {
-      "snr_db": 12,
-      "ber_sim": 0.09833333333333333,
+      "snr_db": 12.0,
+      "ber_sim": 0.105,
       "ber_zf": 0.13
     }
   ]

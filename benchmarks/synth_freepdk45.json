@@ -1,5 +1,5 @@
 {
-  "project": "sc-iterative-mimo-detection",
+  "project": "stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design",
   "pdk": "FreePDK45 / NanGate45",
   "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
   "note": "Measured by Yosys (+ OpenSTA WNS when available) \u2014 not paper table pins",
@@ -8,14 +8,14 @@
       "top": "sc_signed_mul",
       "ok": true,
       "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
-      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/sc_signed_mul_netlist.v",
-      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/sc_signed_mul_yosys.log",
+      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_signed_mul_netlist.v",
+      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_signed_mul_yosys.log",
       "area_um2": 2.66,
       "num_cells": 2,
       "pdk": "FreePDK45 / NanGate Open Cell Library",
       "timing": {
         "ok": true,
-        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/sc_signed_mul_opensta.log",
+        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_signed_mul_opensta.log",
         "clock_period_ns": null,
         "wns_ns": null
       }
@@ -24,14 +24,14 @@
       "top": "sc_sat_add",
       "ok": true,
       "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
-      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/sc_sat_add_netlist.v",
-      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/sc_sat_add_yosys.log",
+      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_sat_add_netlist.v",
+      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_sat_add_yosys.log",
       "area_um2": 17.024,
       "num_cells": 18,
       "pdk": "FreePDK45 / NanGate Open Cell Library",
       "timing": {
         "ok": true,
-        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/sc_sat_add_opensta.log",
+        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_sat_add_opensta.log",
         "clock_period_ns": null,
         "wns_ns": null
       }
@@ -40,14 +40,62 @@
       "top": "tdg_accum_k5",
       "ok": true,
       "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
-      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/tdg_accum_k5_netlist.v",
-      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/tdg_accum_k5_yosys.log",
+      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/tdg_accum_k5_netlist.v",
+      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/tdg_accum_k5_yosys.log",
       "area_um2": 40.432,
       "num_cells": 32,
       "pdk": "FreePDK45 / NanGate Open Cell Library",
       "timing": {
         "ok": true,
-        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/sc-iterative-mimo-detection/synth/out/tdg_accum_k5_opensta.log",
+        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/tdg_accum_k5_opensta.log",
+        "clock_period_ns": null,
+        "wns_ns": null
+      }
+    },
+    {
+      "top": "sc_cas_unit",
+      "ok": true,
+      "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
+      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_cas_unit_netlist.v",
+      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_cas_unit_yosys.log",
+      "area_um2": 160.132,
+      "num_cells": 70,
+      "pdk": "FreePDK45 / NanGate Open Cell Library",
+      "timing": {
+        "ok": true,
+        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sc_cas_unit_opensta.log",
+        "clock_period_ns": null,
+        "wns_ns": null
+      }
+    },
+    {
+      "top": "llr_calculator",
+      "ok": true,
+      "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
+      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/llr_calculator_netlist.v",
+      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/llr_calculator_yosys.log",
+      "area_um2": 517.636,
+      "num_cells": 320,
+      "pdk": "FreePDK45 / NanGate Open Cell Library",
+      "timing": {
+        "ok": true,
+        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/llr_calculator_opensta.log",
+        "clock_period_ns": null,
+        "wns_ns": null
+      }
+    },
+    {
+      "top": "sim_mimo_detector_core",
+      "ok": true,
+      "liberty": "/home/yongfu/proj/website/digital-circuit-designs-ppa/PDK/freepdk45/lib/NangateOpenCellLibrary_typical.lib",
+      "netlist": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sim_mimo_detector_core_netlist.v",
+      "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sim_mimo_detector_core_yosys.log",
+      "area_um2": 1574.72,
+      "num_cells": 944,
+      "pdk": "FreePDK45 / NanGate Open Cell Library",
+      "timing": {
+        "ok": true,
+        "log": "/home/yongfu/proj/probabilistic-computing-lab/projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design/synth/out/sim_mimo_detector_core_opensta.log",
         "clock_period_ns": null,
         "wns_ns": null
       }
