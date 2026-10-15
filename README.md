@@ -263,7 +263,7 @@ where the $2N_r \times 1$ real received vector $\mathbf{y}_{\mathbb{R}}$, $2N_t 
 and the $2N_r \times 2N_t$ real-equivalent channel matrix $\mathbf{H}_{\mathbb{R}}$ is partitioned into four real $N_r \times N_t$ sub-matrices:
 
 $$
-\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix} \in \mathbb{R}^{2N_r \times 2N_t}
+\mathbf{H}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{H}) & -\mathrm{Im}(\mathbf{H}) \\\\ \mathrm{Im}(\mathbf{H}) & \mathrm{Re}(\mathbf{H}) \end{bmatrix} \in \mathbb{R}^{2N_r \times 2N_t}
 $$
 
 #### Four-Element Pedagogy:
@@ -281,9 +281,9 @@ $$
   $$\mathbf{y} = 0.9899 - 0.1414j + (0.05 + 0.02j) = 1.0399 - 0.1214j$$
   Evaluating via the real-equivalent decomposition Eq. (1b):
 
-  $$
-  \mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\ 0.02 \end{bmatrix}
-  $$
+$$
+\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\\\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\\\ 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\\\ -0.1214 \end{bmatrix}
+$$
 
   - **In-Phase Output (Real Component):**
     $$y_{\mathbb{R},0} = (0.6)(0.7071) + (0.8)(0.7071) + 0.05 = 0.4243 + 0.5657 + 0.05 = 1.0399$$
@@ -381,7 +381,7 @@ The exact conditional posterior probabilities require marginalizing over all int
 $$
 \boxed{
 \begin{aligned}
-P(x_{k,b}=+1\mid\mathbf{y},\boldsymbol{\lambda}_2^{e}) &= \sum_{\mathbf{x}_{-k,b}} P(x_{k,b}=+1,\mathbf{x}_{-k,b}\mid\mathbf{y},\boldsymbol{\lambda}_2^{e}) \\
+P(x_{k,b}=+1\mid\mathbf{y},\boldsymbol{\lambda}_2^{e}) &= \sum_{\mathbf{x}_{-k,b}} P(x_{k,b}=+1,\mathbf{x}_{-k,b}\mid\mathbf{y},\boldsymbol{\lambda}_2^{e}) \\\\
 P(x_{k,b}=-1\mid\mathbf{y},\boldsymbol{\lambda}_2^{e}) &= \sum_{\mathbf{x}_{-k,b}} P(x_{k,b}=-1,\mathbf{x}_{-k,b}\mid\mathbf{y},\boldsymbol{\lambda}_2^{e})
 \end{aligned}
 }
@@ -522,7 +522,7 @@ Stochastic signed multiplication computes the product $Z = X \cdot Y$ over dual 
 $$
 \boxed{
 \begin{aligned}
-a(Z) &= a(X) \wedge a(Y) \\
+a(Z) &= a(X) \wedge a(Y) \\\\
 s(Z) &= s(X) \oplus s(Y)
 \end{aligned}
 }
@@ -586,8 +586,8 @@ Stochastic addition over signed ternary streams $\{-1, 0, +1\}$ is governed by *
 $$
 \boxed{
 \begin{aligned}
-s(Z) &= \bigl(a(X) \wedge s(Y)\bigr) \vee \bigl(a(Y) \wedge s(X)\bigr) \\
-a(Z) &= \bigl(a(X) \odot a(Y)\bigr) \vee \Bigl(a(X) \wedge \bigl(s(Y) \oplus s(X)\bigr)\Bigr) \\
+s(Z) &= \bigl(a(X) \wedge s(Y)\bigr) \vee \bigl(a(Y) \wedge s(X)\bigr) \\\\
+a(Z) &= \bigl(a(X) \odot a(Y)\bigr) \vee \Bigl(a(X) \wedge \bigl(s(Y) \oplus s(X)\bigr)\Bigr) \\\\
 \mathrm{sat}(Z) &= \bigl(s(Y) \odot s(X)\bigr) \wedge \bigl(a(X) \wedge a(Y)\bigr)
 \end{aligned}
 }
@@ -717,7 +717,7 @@ During the warm-up phase, the detector evaluates the Euclidean distance metrics 
 $$
 \boxed{
 \begin{aligned}
-\Lambda(+1) &= -\frac{\|\mathbf{y}-\mathbf{H}\mathbf{s}^{+}\|^{2}}{\sigma^{2}} + \lambda_a(+1) \\
+\Lambda(+1) &= -\frac{\|\mathbf{y}-\mathbf{H}\mathbf{s}^{+}\|^{2}}{\sigma^{2}} + \lambda_a(+1) \\\\
 \Lambda(-1) &= -\frac{\|\mathbf{y}-\mathbf{H}\mathbf{s}^{-}\|^{2}}{\sigma^{2}} + \lambda_a(-1)
 \end{aligned}
 }
