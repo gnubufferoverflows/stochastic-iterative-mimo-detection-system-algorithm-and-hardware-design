@@ -239,26 +239,20 @@ projects/stochastic-iterative-mimo-detection-system-algorithm-and-hardware-desig
 In a spatial-multiplexing MIMO wireless transmission system with $N_t$ transmit antennas and $N_r$ receive antennas ($N_r \ge N_t$), the baseband complex received vector $\mathbf{y} \in \mathbb{C}^{N_r}$ is modeled as:
 
 $$
-\boxed{
-\mathbf{y} = \mathbf{H}\mathbf{s} + \mathbf{n}
-}
-\tag{1}
+\boxed{\mathbf{y} = \mathbf{H}\mathbf{s} + \mathbf{n}} \qquad \text{(1)}
 $$
 
 For hardware realization without complex multipliers, the system is decomposed into an equivalent real-valued representation of doubled dimension ($2N_r \times 2N_t$):
 
 $$
-\boxed{
-\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}
-}
-\tag{1b}
+\boxed{\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}} \qquad \text{(1b)}
 $$
 
 where the $2N_r \times 1$ real received vector $\mathbf{y}_{\mathbb{R}}$, $2N_t \times 1$ transmit vector $\mathbf{s}_{\mathbb{R}}$, and $2N_r \times 1$ noise vector $\mathbf{n}_{\mathbb{R}}$ concatenate in-phase and quadrature components:
 
-- **Received Real Vector:** $\mathbf{y}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{y})^T & \mathrm{Im}(\mathbf{y})^T \end{bmatrix}^T \in \mathbb{R}^{2N_r}$
-- **Transmit Real Vector:** $\mathbf{s}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{s})^T & \mathrm{Im}(\mathbf{s})^T \end{bmatrix}^T \in \mathbb{R}^{2N_t}$
-- **Real Noise Vector:** $\mathbf{n}_{\mathbb{R}} = \begin{bmatrix} \mathrm{Re}(\mathbf{n})^T & \mathrm{Im}(\mathbf{n})^T \end{bmatrix}^T \in \mathbb{R}^{2N_r}$
+- **Received Real Vector:** $\mathbf{y}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{y})^T, \; \mathrm{Im}(\mathbf{y})^T]^T \in \mathbb{R}^{2N_r}$
+- **Transmit Real Vector:** $\mathbf{s}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{s})^T, \; \mathrm{Im}(\mathbf{s})^T]^T \in \mathbb{R}^{2N_t}$
+- **Real Noise Vector:** $\mathbf{n}_{\mathbb{R}} = [\mathrm{Re}(\mathbf{n})^T, \; \mathrm{Im}(\mathbf{n})^T]^T \in \mathbb{R}^{2N_r}$
 
 and the $2N_r \times 2N_t$ real-equivalent channel matrix $\mathbf{H}_{\mathbb{R}}$ is partitioned into four real $N_r \times N_t$ sub-matrices:
 
@@ -282,9 +276,18 @@ $$
   Evaluating via the real-equivalent decomposition Eq. (1b):
 
 $$
-\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix} \begin{bmatrix} 0.7071 \\\\ 0.7071 \end{bmatrix} + \begin{bmatrix} 0.05 \\\\ 0.02 \end{bmatrix} = \begin{bmatrix} 1.0399 \\\\ -0.1214 \end{bmatrix}
+\mathbf{y}_{\mathbb{R}} = \mathbf{H}_{\mathbb{R}}\mathbf{s}_{\mathbb{R}} + \mathbf{n}_{\mathbb{R}}
 $$
 
+  where:
+  - Transmit vector: $\mathbf{s}_{\mathbb{R}} = [0.7071, \; 0.7071]^T$
+  - AWGN noise vector: $\mathbf{n}_{\mathbb{R}} = [0.05, \; 0.02]^T$
+  - Channel matrix:
+    $$
+    \mathbf{H}_{\mathbb{R}} = \begin{bmatrix} 0.6 & 0.8 \\\\ -0.8 & 0.6 \end{bmatrix}
+    $$
+
+  Computing the matrix-vector product row by row:
   - **In-Phase Output (Real Component):**
     $$y_{\mathbb{R},0} = (0.6)(0.7071) + (0.8)(0.7071) + 0.05 = 0.4243 + 0.5657 + 0.05 = 1.0399$$
   - **Quadrature Output (Imaginary Component):**
