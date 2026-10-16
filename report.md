@@ -1,51 +1,31 @@
-# Implementation Compliance & Verification Report
+# Compliance Report
 
-**Project:** `stochastic-iterative-mimo-detection-system-algorithm-and-hardware-design`  
-**Reference Paper:** J. Chen, J. Hu, and G. E. Sobelman, *"Stochastic Iterative MIMO Detection System: Algorithm and Hardware Design,"* IEEE Transactions on Circuits and Systems I: Regular Papers, vol. 62, no. 4, pp. 1205–1214, April 2015. [DOI: 10.1109/TCSI.2015.2390558](https://doi.org/10.1109/TCSI.2015.2390558)
+**Paper:** J. Chen, J. Hu, and G. E. Sobelman, "Stochastic Iterative MIMO Detection System: Algorithm and Hardware Design," *IEEE TCAS-I*, vol. 62, no. 4, pp. 1205–1214, Apr. 2015. [doi:10.1109/TCSI.2015.2390558](https://doi.org/10.1109/TCSI.2015.2390558)
 
----
+Status key: **Implemented** (follows the paper and is tested), **Interpreted** (the paper is ambiguous; the choice is documented in the README), **Not reproduced** (implemented, but the measured result disagrees with the paper), **Not implemented**, **Paper value** (quoted, not measured).
 
-## 1. Scope Lock & Compliance Matrix
+| Item | Status | Evidence |
+| :--- | :--- | :--- |
+| System model, Eq. (1), real-valued decomposition | Implemented | `src/mimo_channel.py`; test "Real decomposition" |
+| TGn channel model C | Implemented | `TGnChannelC`; unit power, antenna and frequency correlation checked |
+| Gray 16/64-QAM mapping, Eq. (11), Fig. 7 | Implemented | test "16/64-QAM Gray mapping" (includes Fig. 7 level order) |
+| Signed streams, SM (Fig. 2), SA (Table I, Eq. 6) | Implemented | Python truth tables and RTL, 0 mismatches over 2000 random cycles |
+| TDG, Eqs. (19)–(22), k1 = 6, k2 = 4, L = 64 | Implemented, Interpreted | Every 10-bit value is carried exactly by 16 windows (test "TDG windows"); fine-bit injection timing is a documented choice |
+| Table II multiplier SNR | Not reproduced | Measured values are 3–14 dB below the paper for every method (see README) |
+| Warm-up, Eqs. (7)–(9) | Implemented, Interpreted | Logistic R in Eq. (8); random initial sample |
+| GsUD, Eqs. (10)–(14) | Implemented, Interpreted | λ₂ added after the CAS; extrinsic λ₁^e to the decoder |
+| Parallel LLR, Eqs. (15)–(17) | Implemented | test "Parallel LLR distances" against brute force |
+| CAS, Eq. (18) | Implemented | Python and RTL; RTL uses a signed compare (no overflow) |
+| Turbo code, R = 1/2 K = 1024; R ≈ 5/6 K = 1952 | Implemented | Error-free at high SNR; FER 0.5% at 1.5 dB on BPSK AWGN (rate 1/2) |
+| Fig. 10 FER (16/64-QAM) | Not reproduced | SIM with the paper's settings has FER = 1 at every SNR tested |
+| Fig. 9 convergence histogram | Not reproduced | 0 of 200 frames converge at 6.8–7.2 dB with the paper's settings |
+| Fig. 11 BER vs iterations | Not reproduced | SIM BER stays near 0.3 |
+| Detector datapath, Figs. 4, 7, 8 | Implemented, Interpreted | `src/sc_detector.py` and `hdl/sim_mimo_detector_core.v`, bit-exact (0 mismatches, 30 iterations); norm unit is a documented reading of Fig. 8 |
+| Stochastic turbo decoder [22] | Not implemented | Floating-point max-log BCJR used instead |
+| 128-detector array, interleaver network (Fig. 6, Eqs. 23–24) | Not implemented | Single-vector core only |
+| Synthesis | Implemented (generic) | Yosys generic gate counts in `benchmarks/synth_results.json`; no technology mapping, timing or power |
+| Table III (1.98 mm², 500 MHz, 314 mW, 787.5 Mbps) | Paper value | The paper's Table III names library `cb13fs120_tsmc` while its text says SMIC 130 nm |
+| Table IV comparison | Paper value | Transcribed in `scripts/run_campaign.py` and the README |
+| 787.5 Mb/s throughput | Paper value | Not derivable from the stated parameters; 2048 coded bits / (20 × 65 cycles) at 500 MHz gives 787.7 Mb/s |
 
-| Paper Component / Landmark | Status | Verification Engine | Output Artifact / Location |
-| :--- | :---: | :---: | :--- |
-| **MIMO Channel & Real Equivalence (Eq. 1)** | **PASS** | Python Model | [`src/mimo_channel.py`](src/mimo_channel.py) |
-| **Soft LLR Formulation (Eqs. 2–3)** | **PASS** | Python + Verilog RTL | [`src/sim_mimo.py`](src/sim_mimo.py), [`hdl/llr_calculator.v`](hdl/llr_calculator.v) |
-| **Signed SC Multiplier (Fig. 2)** | **PASS** | Python + Verilog RTL | [`hdl/sc_signed_mul.v`](hdl/sc_signed_mul.v), 0 mismatches in Icarus |
-| **Table I Saturating Adder (Eq. 6)** | **PASS** | Python + Verilog RTL | [`hdl/sc_sat_add.v`](hdl/sc_sat_add.v), 0 mismatches in Icarus |
-| **Two Divisions Generator (TDG, Eqs. 19–22)** | **PASS** | Python + Verilog RTL | [`hdl/tdg_accum.v`](hdl/tdg_accum.v), [`src/tdg.py`](src/tdg.py) |
-| **Table II Multiplier SNR Replications** | **PASS** | Python Simulation | Measured 52.4 dB (TDG) vs 39.1 dB paper at $L=64$ ([`benchmarks/results/sim_campaign.json`](benchmarks/results/sim_campaign.json)) |
-| **Intermediate Residual Sharing (Eqs. 15–17)** | **PASS** | Python + Verilog RTL | Fast norm update $\|\mathbf{r} \pm \Delta \mathbf{r}\|^2$ validated |
-| **Compare-and-Select (CAS) Unit (Eq. 18)** | **PASS** | Verilog RTL | [`hdl/sc_cas_unit.v`](hdl/sc_cas_unit.v), 0 mismatches in Icarus |
-| **Gibbs Warm-Up & GsUD Outer Loop (Eqs. 7–14)**| **PASS** | Python + Verilog RTL | [`src/sim_mimo.py`](src/sim_mimo.py), [`hdl/sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) |
-| **$4 \times 4$ 16-QAM and 64-QAM Gray Constellations**| **PASS** | Python Model | [`src/qam.py`](src/qam.py), 100% roundtrip Gray map/demap |
-| **FreePDK45 / NanGate45 ASIC Synthesis** | **PASS** | Yosys Synthesis | All 6 targets synthesized ([`benchmarks/synth_freepdk45.json`](benchmarks/synth_freepdk45.json)) |
-| **128-Parallel 130 nm ASIC (Tables III–IV)** | **LITERATURE REF** | Silicon Benchmark | Labeled as paper silicon reference (130 nm TSMC, 1.98 mm², 314 mW, 787.5 Mbps) |
-| **MIMO Detection & Convergence (Figs. 9–11)** | **PASS** | Monte Carlo Campaign | 100% genuine simulation campaign ([`benchmarks/results/sim_campaign.json`](benchmarks/results/sim_campaign.json)); all synthetic formulas eliminated |
-
----
-
-## 2. FreePDK45 / NanGate45 Physical Synthesis Summary
-
-All 6 synthesizable Verilog modules were mapped to **FreePDK45 / NanGate Open Cell Library (45 nm, 1.1 V, typical corner)** using Yosys:
-
-| Module Top Level | Cell Count | Total Area ($\mu\text{m}^{2}$) | Gate Equivalent (GE, NanGate NAND2) | Netlist & Log Artifacts |
-| :--- | :---: | :---: | :---: | :--- |
-| `sc_signed_mul` | 2 | 2.660 | 3.3 GE | [`synth/out/sc_signed_mul_netlist.v`](synth/out/sc_signed_mul_netlist.v) |
-| `sc_sat_add` | 18 | 17.024 | 21.5 GE | [`synth/out/sc_sat_add_netlist.v`](synth/out/sc_sat_add_netlist.v) |
-| `tdg_accum_k5` | 32 | 40.432 | 51.0 GE | [`synth/out/tdg_accum_k5_netlist.v`](synth/out/tdg_accum_k5_netlist.v) |
-| `sc_cas_unit` | 70 | 160.132 | 202.2 GE | [`synth/out/sc_cas_unit_netlist.v`](synth/out/sc_cas_unit_netlist.v) |
-| `llr_calculator` | 320 | 517.636 | 653.6 GE | [`synth/out/llr_calculator_netlist.v`](synth/out/llr_calculator_netlist.v) |
-| `sim_mimo_detector_core` | 944 | 1,574.720 | 1,988.3 GE | [`synth/out/sim_mimo_detector_core_netlist.v`](synth/out/sim_mimo_detector_core_netlist.v) |
-
----
-
-## 3. Definition of Done (DoD) Checklist
-
-- [x] **D1: Algorithmic Suite**: Complete Python models for $4\times 4$ 16-QAM and 64-QAM, Gray mapping (Eq. 11), residual vector sharing (Eqs. 15–17), Gibbs warm-up (Eqs. 7–9), and GsUD outer loop (Eqs. 10–14).
-- [x] **D2: Synthesizable Verilog RTL**: Full suite of 6 modules (`sc_signed_mul.v`, `sc_sat_add.v`, `tdg_accum.v`, `sc_cas_unit.v`, `llr_calculator.v`, `sim_mimo_detector_core.v`).
-- [x] **D3: Cycle-Accurate Parity Check**: Shared vector verification (`sim/gen_stim.py`, `hdl/tb_sim.v`, `sim/run_tests.py`) producing **0 mismatches** across all units in Icarus Verilog.
-- [x] **D4: Measured Physical Synthesis**: FreePDK45 / NanGate45 Yosys synthesis results generated and recorded in `benchmarks/synth_freepdk45.json`.
-- [x] **D5: Publication-Grade Visual Artifacts**: All 7 figures generated under `docs/figures/` adhering to `/dev-plot` standards (300 DPI, `#0033cc` / `#cc0000`, 2.0 pt spines).
-- [x] **D6: Rigorous Documentation**: Comprehensive `README.md` (>1,200 lines) with both Python and Verilog RTL code snippets embedded for every single content description and equation.
-- [x] **D7: Mathematical Integrity**: Clean KaTeX formatting with zero broken superscripts across all equations.
+See the README sections "Interpretation choices" and "What does not match the paper" for details.

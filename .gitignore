@@ -2,9 +2,12 @@ __pycache__/
 *.pyc
 .venv/
 *.vvp
-sim/stim_*.hex
-sim/tb_counts.txt
-sim/gold_*.hex
+sim/*_stim.txt
+sim/*_gold.txt
 synth/out/
+node_modules/
+benchmarks/results/part_*.json
+benchmarks/results/job_*.json
+benchmarks/results/log_*.txt
 *.log
 .DS_Store

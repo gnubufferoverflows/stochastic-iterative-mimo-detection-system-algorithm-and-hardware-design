@@ -1,0 +1,48 @@
+{
+ "tool": "Yosys (YoWASP build)",
+ "liberty": null,
+ "flow": "synth -flatten (generic gates)",
+ "note": "Logic synthesis only; no placement, routing or timing. Gate equivalents use NAND2_X1 = 0.798 um^2.",
+ "targets": [
+  {
+   "top": "sc_signed_mul",
+   "cells": 2,
+   "flip_flops": 0
+  },
+  {
+   "top": "sc_sat_add",
+   "cells": 20,
+   "flip_flops": 0
+  },
+  {
+   "top": "tdg_sng",
+   "cells": 44,
+   "flip_flops": 0
+  },
+  {
+   "top": "sc_norm_unit",
+   "cells": 35,
+   "flip_flops": 4
+  },
+  {
+   "top": "sc_cas_unit",
+   "cells": 59,
+   "flip_flops": 8
+  },
+  {
+   "top": "llr_calculator",
+   "cells": 236,
+   "flip_flops": 16
+  },
+  {
+   "top": "sc_vector_norm",
+   "cells": 348,
+   "flip_flops": 46
+  },
+  {
+   "top": "sim_mimo_detector_core",
+   "cells": 19243,
+   "flip_flops": 1510
+  }
+ ]
+}

@@ -1,57 +1,46 @@
-// Sub-block diagram of the LLR calculator (Chen TCAS-I 2015 Fig. 8, Eq. 9, Eq. 18).
-// Integrates stochastic norms, TCS conversion, CAS max-log metric tracking,
-// LLR subtraction, and output stochastic stream generation.
+// LLR calculator sub-block of Fig. 8 for one bit x_{k,b}.
+// The DEC multiplexer of Fig. 7 routes the counts of the current sample and of the
+// bit-flipped sample to the + and - hypotheses. l = -count is the L1 approximation of
+// -||d||^2 / sigma^2. Two CAS units keep the maxima (Eq. 18), lambda1^e = lmax+ - lmax-
+// (Eq. 13), and the stream generator converts it back to a stochastic stream.
 `timescale 1ns/1ps
 
-module llr_calculator #(
-    parameter integer WIDTH = 16,
-    parameter integer L_WIDTH = 6 // L=64 default
-) (
-    input  wire                     clk,
-    input  wire                     rst_n,
-    input  wire                     clr_candidates, // Reset max metrics for new bit
-    input  wire                     eval_tick,      // End of L-cycle stream evaluation
-    input  wire signed [WIDTH-1:0]  metric_pos_tcs, // Evaluated +1 hypothesis metric
-    input  wire signed [WIDTH-1:0]  metric_neg_tcs, // Evaluated -1 hypothesis metric
-    input  wire [WIDTH-2:0]         rng_mag,        // Unsigned uniform RNG for stream gen
-    output wire signed [WIDTH-1:0]  llr_tcs,        // Two's complement LLR: l_pos_max - l_neg_max
-    output wire                     llr_stream_sign,// Sign stream bit
-    output wire                     llr_stream_mag  // Magnitude stream bit
+module llr_calculator (
+    input  wire              clk,
+    input  wire              rst_n,
+    input  wire              cas_clr,
+    input  wire              upd,       // end-of-iteration strobe
+    input  wire              x_bit,     // current sample bit
+    input  wire [6:0]        c_cur,     // count of the current sample's d vector
+    input  wire [6:0]        c_flip,    // count of the bit-flipped d vector
+    input  wire [5:0]        rnd,       // random number for the stream generator
+    output wire signed [7:0] l_pos,     // l+ of this iteration
+    output wire signed [7:0] l_neg,     // l- of this iteration
+    output wire signed [7:0] llr,       // lambda1^e
+    output wire              llr_sign,
+    output wire              llr_mag
 );
-    wire signed [WIDTH-1:0] l_pos_max;
-    wire signed [WIDTH-1:0] l_neg_max;
+    wire [6:0] c_pos = x_bit ? c_cur  : c_flip;
+    wire [6:0] c_neg = x_bit ? c_flip : c_cur;
 
-    // CAS for +1 hypothesis
-    sc_cas_unit #(.WIDTH(WIDTH)) u_cas_pos (
-        .clk(clk),
-        .rst_n(rst_n),
-        .clr(clr_candidates),
-        .en(eval_tick),
-        .in_val(metric_pos_tcs),
-        .max_out(l_pos_max)
+    assign l_pos = -$signed({1'b0, c_pos});
+    assign l_neg = -$signed({1'b0, c_neg});
+
+    wire signed [7:0] lmax_pos, lmax_neg;
+
+    sc_cas_unit #(.WIDTH(8)) u_cas_pos (
+        .clk(clk), .rst_n(rst_n), .clr(cas_clr), .en(upd), .in_val(l_pos), .max_out(lmax_pos)
+    );
+    sc_cas_unit #(.WIDTH(8)) u_cas_neg (
+        .clk(clk), .rst_n(rst_n), .clr(cas_clr), .en(upd), .in_val(l_neg), .max_out(lmax_neg)
     );
 
-    // CAS for -1 hypothesis
-    sc_cas_unit #(.WIDTH(WIDTH)) u_cas_neg (
-        .clk(clk),
-        .rst_n(rst_n),
-        .clr(clr_candidates),
-        .en(eval_tick),
-        .in_val(metric_neg_tcs),
-        .max_out(l_neg_max)
-    );
+    assign llr = lmax_pos - lmax_neg;
 
-    // Max-log LLR: lambda = l_pos_max - l_neg_max (Eq. 9)
-    assign llr_tcs = l_pos_max - l_neg_max;
+    // Stream generator (Fig. 1): sign bit and (|lambda| > random number), |lambda| saturated to 63
+    wire [7:0] abs_llr = llr[7] ? -llr : llr;
+    wire [5:0] abs_sat = (abs_llr > 8'd63) ? 6'd63 : abs_llr[5:0];
 
-    // Stream Generator (Fig. 1 & Fig. 8)
-    // Sign bit: 1 if negative, 0 if positive
-    assign llr_stream_sign = llr_tcs[WIDTH-1];
-
-    // Absolute value of LLR for magnitude stream
-    wire [WIDTH-2:0] abs_llr = llr_tcs[WIDTH-1] ? (~llr_tcs[WIDTH-2:0] + 1'b1) : llr_tcs[WIDTH-2:0];
-
-    // Magnitude stream: 1 if abs(LLR) > RNG
-    assign llr_stream_mag = (abs_llr > rng_mag);
-
+    assign llr_sign = llr[7];
+    assign llr_mag  = (abs_sat > rnd);
 endmodule

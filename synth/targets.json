@@ -1,11 +1,16 @@
 {
-  "description": "FreePDK45 targets for Chen TCAS-I 2015 SIM building blocks and detector core",
+  "description": "Synthesis targets: stochastic computing elements, LLR path and the full single-vector detector core",
   "targets": [
     {"top": "sc_signed_mul", "files": ["hdl/sc_signed_mul.v"]},
     {"top": "sc_sat_add", "files": ["hdl/sc_sat_add.v"]},
-    {"top": "tdg_accum_k5", "files": ["hdl/tdg_accum.v", "hdl/tdg_accum_k5.v"]},
+    {"top": "tdg_sng", "files": ["hdl/sc_sat_add.v", "hdl/tdg_sng.v"]},
+    {"top": "sc_norm_unit", "files": ["hdl/sc_norm_unit.v"]},
     {"top": "sc_cas_unit", "files": ["hdl/sc_cas_unit.v"]},
     {"top": "llr_calculator", "files": ["hdl/sc_cas_unit.v", "hdl/llr_calculator.v"]},
-    {"top": "sim_mimo_detector_core", "files": ["hdl/sc_cas_unit.v", "hdl/llr_calculator.v", "hdl/sim_mimo_detector_core.v"]}
+    {"top": "sc_vector_norm", "files": ["hdl/sc_sat_add.v", "hdl/sc_norm_unit.v", "hdl/tcs_converter.v", "hdl/sc_vector_norm.v"]},
+    {"top": "sim_mimo_detector_core", "files": [
+      "hdl/sc_signed_mul.v", "hdl/sc_sat_add.v", "hdl/sc_tern_mul.v", "hdl/debruijn_gen.v", "hdl/tdg_sng.v",
+      "hdl/sc_norm_unit.v", "hdl/tcs_converter.v", "hdl/sc_vector_norm.v", "hdl/sc_cas_unit.v",
+      "hdl/llr_calculator.v", "hdl/sim_mimo_detector_core.v"]}
   ]
 }
