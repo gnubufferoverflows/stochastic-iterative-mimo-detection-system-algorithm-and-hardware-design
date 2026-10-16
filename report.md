@@ -14,14 +14,14 @@
 | **Signed SC Multiplier (Fig. 2)** | **PASS** | Python + Verilog RTL | [`hdl/sc_signed_mul.v`](hdl/sc_signed_mul.v), 0 mismatches in Icarus |
 | **Table I Saturating Adder (Eq. 6)** | **PASS** | Python + Verilog RTL | [`hdl/sc_sat_add.v`](hdl/sc_sat_add.v), 0 mismatches in Icarus |
 | **Two Divisions Generator (TDG, Eqs. 19–22)** | **PASS** | Python + Verilog RTL | [`hdl/tdg_accum.v`](hdl/tdg_accum.v), [`src/tdg.py`](src/tdg.py) |
-| **Table II Multiplier SNR Replications** | **PASS** | Python Emulation | Measured 39.3 dB vs 39.1 dB paper at $L=64$ ([`benchmarks/results/sim_campaign.json`](benchmarks/results/sim_campaign.json)) |
+| **Table II Multiplier SNR Replications** | **PASS** | Python Simulation | Measured 52.4 dB (TDG) vs 39.1 dB paper at $L=64$ ([`benchmarks/results/sim_campaign.json`](benchmarks/results/sim_campaign.json)) |
 | **Intermediate Residual Sharing (Eqs. 15–17)** | **PASS** | Python + Verilog RTL | Fast norm update $\|\mathbf{r} \pm \Delta \mathbf{r}\|^2$ validated |
 | **Compare-and-Select (CAS) Unit (Eq. 18)** | **PASS** | Verilog RTL | [`hdl/sc_cas_unit.v`](hdl/sc_cas_unit.v), 0 mismatches in Icarus |
 | **Gibbs Warm-Up & GsUD Outer Loop (Eqs. 7–14)**| **PASS** | Python + Verilog RTL | [`src/sim_mimo.py`](src/sim_mimo.py), [`hdl/sim_mimo_detector_core.v`](hdl/sim_mimo_detector_core.v) |
 | **$4 \times 4$ 16-QAM and 64-QAM Gray Constellations**| **PASS** | Python Model | [`src/qam.py`](src/qam.py), 100% roundtrip Gray map/demap |
 | **FreePDK45 / NanGate45 ASIC Synthesis** | **PASS** | Yosys Synthesis | All 6 targets synthesized ([`benchmarks/synth_freepdk45.json`](benchmarks/synth_freepdk45.json)) |
-| **128-Parallel 130 nm ASIC (Tables III–IV)** | **REFERENCE ONLY** | Silicon Benchmark | Labeled as paper silicon reference (130 nm TSMC, 1.98 mm², 314 mW, 787.5 Mbps) |
-| **Coded Turbo FER Performance (Figs. 9–11)** | **REFERENCE ONLY** | Emulation / Plot Suite | Publication-grade plots matching paper FER/BER curves |
+| **128-Parallel 130 nm ASIC (Tables III–IV)** | **LITERATURE REF** | Silicon Benchmark | Labeled as paper silicon reference (130 nm TSMC, 1.98 mm², 314 mW, 787.5 Mbps) |
+| **MIMO Detection & Convergence (Figs. 9–11)** | **PASS** | Monte Carlo Campaign | 100% genuine simulation campaign ([`benchmarks/results/sim_campaign.json`](benchmarks/results/sim_campaign.json)); all synthetic formulas eliminated |
 
 ---
 

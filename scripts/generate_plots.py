@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """Generate publication-quality figures for Stochastic Iterative MIMO Detection System.
 
+All figures load genuinely measured simulation and synthesis benchmarks:
+- Fig 1: Stochastic Multiplier SNR Benchmark (loads benchmarks/results/sim_campaign.json Table II)
+- Fig 2: 4x4 16-QAM MIMO Detection FER/BER vs Paper Coded Reference (loads sim_campaign.json)
+- Fig 3: FreePDK45 Yosys ASIC Synthesis Breakdown (loads benchmarks/synth_freepdk45.json)
+- Fig 4: Empirical SIM Iterations Distribution with Early Termination (loads sim_campaign.json)
+- Fig 5: Measured BER Convergence vs Outer Iterations (loads sim_campaign.json)
+- Fig 6: Literature ASIC Throughput Comparison (Table IV published silicon benchmarks)
+- Fig 7: Joint Detection and Decoding (JDD) Pipeline Timeline (Fig. 3 Architectural model)
+
 Adheres strictly to /dev-plot aesthetic guidelines:
 - 300 DPI high-resolution PNG and clean vector SVG exports
 - Professional palette: Primary Blue (#0033cc), Accent Red (#cc0000), Emerald (#008844), Neutral (#444444)
 - 2.0 pt spine line-width, legible typography, no clipped labels
-- Publication comparisons replicating Figures 9, 10, 11, Table II, Table III, Table IV
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,8 +54,18 @@ plt.rcParams.update({
 })
 
 
-def plot_fig1_mul_snr():
-    """Fig. 1: Stochastic Multiplier SNR Benchmark (Table II replication)."""
+def load_campaign_data() -> dict:
+    campaign_file = ROOT / "benchmarks" / "results" / "sim_campaign.json"
+    if not campaign_file.is_file():
+        raise FileNotFoundError(
+            f"Campaign file not found at {campaign_file}. Run scripts/run_campaign.py first!"
+        )
+    return json.loads(campaign_file.read_text())
+
+
+def plot_fig1_mul_snr(data: dict):
+    """Fig. 1: Stochastic Multiplier SNR Benchmark (Measured vs Table II Reference)."""
+    t2 = data["table2_multiplier_snr"]
     methods = [
         "Random\n(L=1024)",
         "DSC [25]\n(L=1024)",
@@ -54,8 +73,9 @@ def plot_fig1_mul_snr():
         "SWG [23]\n(L=64)",
         "TDG [Paper]\n(L=64)",
     ]
-    paper_snr = [43.0, 57.8, 34.1, 27.8, 39.1]
-    measured_snr = [42.8, 56.9, 34.2, 28.1, 39.3]
+    keys = ["Random_1024", "DSC_1024", "DSC_64", "SWG_64", "TDG_64"]
+    paper_snr = [t2[k]["paper_snr_db"] for k in keys]
+    measured_snr = [t2[k]["measured_snr_db"] for k in keys]
 
     x = np.arange(len(methods))
     width = 0.35
@@ -64,13 +84,14 @@ def plot_fig1_mul_snr():
     ax.grid(True, axis="y", zorder=0)
 
     rects1 = ax.bar(x - width/2, paper_snr, width, label="Paper Published [Table II]", color=CLR_GRAY, alpha=0.75, zorder=3)
-    rects2 = ax.bar(x + width/2, measured_snr, width, label="Measured Emulation", color=CLR_PRIMARY, zorder=3)
+    rects2 = ax.bar(x + width/2, measured_snr, width, label="Measured Simulation [This Repo]", color=CLR_PRIMARY, zorder=3)
 
     # Highlight TDG short-stream advantage
+    tdg_meas = t2["TDG_64"]["measured_snr_db"]
     ax.annotate(
-        "TDG: +11.3 dB over SWG\nat L=64 latency!",
-        xy=(4 + width/2, 39.3),
-        xytext=(3.0, 48.0),
+        f"TDG Measured:\n{tdg_meas:.1f} dB at L=64 latency!",
+        xy=(4 + width/2, tdg_meas),
+        xytext=(2.6, 50.0),
         arrowprops=dict(facecolor=CLR_ACCENT, shrink=0.08, width=1.5, headwidth=6),
         fontweight="bold",
         color=CLR_ACCENT,
@@ -95,42 +116,42 @@ def plot_fig1_mul_snr():
     plt.close(fig)
 
 
-def plot_fig2_fer_performance():
-    """Fig. 2: Coded 4x4 MIMO FER Comparison (Fig. 10 replication)."""
-    snr_16qam = np.array([3.0, 3.5, 4.0, 4.25, 4.5, 5.0, 5.5])
-    # FER curves matching Fig. 10(a)
-    fer_sim_16 = np.array([0.85, 0.32, 0.02, 1e-4, 1.2e-5, 8e-7, 1e-7])
-    fer_trad_4 = np.array([0.90, 0.40, 0.03, 1.1e-4, 1.5e-5, 1e-6, 1e-7])
-    fer_trad_2 = np.array([0.98, 0.75, 0.25, 0.015, 0.001, 8e-5, 5e-6])
-    fer_trad_1 = np.array([1.00, 0.95, 0.80, 0.45, 0.15, 0.01, 8e-4])
+def plot_fig2_fer_performance(data: dict):
+    """Fig. 2: 4x4 MIMO Detection FER Performance (Measured Monte Carlo vs Paper Fig. 10)."""
+    mimo_perf = data["mimo_detection_performance"]
+    snr_list = mimo_perf["snr_eb_n0_db"]
+    meas = mimo_perf["measured"]
+    ref = mimo_perf["paper_fig10_ref"]
 
-    fig, ax = plt.subplots(figsize=(8.0, 5.2), dpi=300)
+    fig, ax = plt.subplots(figsize=(8.2, 5.2), dpi=300)
     ax.grid(True, which="both", zorder=0)
 
-    ax.semilogy(snr_16qam, fer_sim_16, "s-", color=CLR_PRIMARY, label="SIM (12 outer, warm-up 8) [This Work]", zorder=4)
-    ax.semilogy(snr_16qam, fer_trad_4, "o--", color=CLR_ACCENT, label="Traditional Iterative (4 outer iterations)", zorder=4)
-    ax.semilogy(snr_16qam, fer_trad_2, "^-.", color=CLR_AMBER, label="Traditional Iterative (2 outer iterations)", zorder=3)
-    ax.semilogy(snr_16qam, fer_trad_1, "d:", color=CLR_GRAY, label="Traditional Iterative (1 outer iteration)", zorder=3)
+    # Plot measured curves from genuine Monte Carlo campaign
+    ax.semilogy(snr_list, meas["sim_12_8"]["fer"], "s-", color=CLR_PRIMARY, lw=2.2, label="SIM (12 outer, warm-up 8) [Measured]", zorder=4)
+    ax.semilogy(snr_list, meas["trad_4_8"]["fer"], "o--", color=CLR_ACCENT, lw=2.0, label="Traditional (4 outer) [Measured]", zorder=4)
+    ax.semilogy(snr_list, meas["trad_2_8"]["fer"], "^-.", color=CLR_AMBER, lw=1.8, label="Traditional (2 outer) [Measured]", zorder=3)
+    ax.semilogy(snr_list, meas["mmse"]["fer"], "d:", color=CLR_GRAY, lw=1.8, label="MMSE Linear Baseline [Measured]", zorder=3)
 
-    ax.axhline(1e-4, color=CLR_GRAY, linestyle=":", alpha=0.8)
-    ax.axvline(4.25, color=CLR_PRIMARY, linestyle=":", alpha=0.8)
-    ax.plot(4.25, 1e-4, "r*", markersize=14, zorder=6)
+    # Overlay paper's published reference curve from Fig. 10(a) (coded turbo)
+    ax.semilogy(ref["snr_eb_n0_db"], ref["fer_sim_12"], ":", color=CLR_GREEN, lw=2.5, alpha=0.85, label="Paper Published SIM (Rate-1/2 Turbo Ref)", zorder=2)
+
+    ax.axhline(1e-4, color=CLR_GRAY, linestyle=":", alpha=0.6)
     ax.annotate(
-        "Headline Point:\nFER = 10^-4 at Eb/N0 = 4.25 dB",
+        "Paper Reference Target:\nFER = 10^-4 at 4.25 dB",
         xy=(4.25, 1e-4),
-        xytext=(4.6, 2e-3),
-        arrowprops=dict(facecolor=CLR_ACCENT, shrink=0.08, width=1.5, headwidth=6),
+        xytext=(5.5, 2e-3),
+        arrowprops=dict(facecolor=CLR_GREEN, shrink=0.08, width=1.5, headwidth=6),
         fontweight="bold",
-        color=CLR_ACCENT,
-        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=CLR_ACCENT, lw=1.5),
+        color=CLR_GREEN,
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=CLR_GREEN, lw=1.5),
         zorder=5,
     )
 
     ax.set_xlabel(r"$E_b / N_0$ (dB)")
     ax.set_ylabel("Frame Error Rate (FER)")
-    ax.set_title(r"Coded $4 \times 4$ 16-QAM FER Performance vs. Iteration Budgets (Fig. 10)")
-    ax.set_xlim(2.8, 5.7)
-    ax.set_ylim(1e-7, 1.2)
+    ax.set_title(r"Coded $4 \times 4$ 16-QAM FER Performance vs. SNR (Fig. 10)")
+    ax.set_xlim(1.5, 14.5)
+    ax.set_ylim(1e-5, 1.2)
     ax.legend(frameon=True, facecolor="white", edgecolor=CLR_GRAY, loc="upper right")
 
     fig.savefig(FIG_DIR / "fig2_fer_performance.png", dpi=300)
@@ -168,7 +189,6 @@ def plot_fig3_synth_breakdown():
     ax2.set_ylabel("Cell Count", color=CLR_GREEN, fontweight="bold")
     ax2.tick_params(axis="y", labelcolor=CLR_GREEN)
 
-    # Annotate area values
     for r in rects1:
         h = r.get_height()
         ax1.annotate(f"{h:.1f}", xy=(r.get_x() + r.get_width()/2, h), xytext=(0, 3),
@@ -181,33 +201,33 @@ def plot_fig3_synth_breakdown():
     plt.close(fig)
 
 
-def plot_fig4_iterations_hist():
-    """Fig. 4: SIM Iterations Histogram (Fig. 9 replication)."""
-    iters = np.arange(4, 21)
-
-    # Probability mass distributions at 3.0, 4.0, 5.0 dB
-    # At high SNR, early termination finishes in fewer iterations
-    p_3db = np.exp(-((iters - 16)**2) / (2 * 2.2**2))
-    p_3db /= np.sum(p_3db)
-
-    p_4db = np.exp(-((iters - 11)**2) / (2 * 2.5**2))
-    p_4db /= np.sum(p_4db)
-
-    p_5db = np.exp(-((iters - 7)**2) / (2 * 1.8**2))
-    p_5db /= np.sum(p_5db)
+def plot_fig4_iterations_hist(data: dict):
+    """Fig. 4: SIM Iterations Empirical Distribution (Fig. 9 Measured Replication)."""
+    hist_data = data["iteration_histograms"]
+    bins = np.array(hist_data["iteration_bins"])
+    dists = hist_data["distributions"]
 
     fig, ax = plt.subplots(figsize=(8.2, 4.8), dpi=300)
     ax.grid(True, zorder=0)
 
-    ax.plot(iters, p_3db * 100, "o-", color=CLR_ACCENT, label=r"$E_b / N_0 = 3.0\ \mathrm{dB}$ (Challenging)", lw=2.2, zorder=3)
-    ax.plot(iters, p_4db * 100, "s-", color=CLR_AMBER, label=r"$E_b / N_0 = 4.0\ \mathrm{dB}$ (Transition)", lw=2.2, zorder=3)
-    ax.plot(iters, p_5db * 100, "^-", color=CLR_PRIMARY, label=r"$E_b / N_0 = 5.0\ \mathrm{dB}$ (High Confidence)", lw=2.2, zorder=4)
+    # Empirical percentages from measured early stopping simulations
+    p_3db = dists["3.0_dB"]["percentages"]
+    p_5db = dists["5.0_dB"]["percentages"]
+    p_8db = dists["8.0_dB"]["percentages"]
 
-    ax.set_xlabel("Number of Detector-Decoder Iterations")
-    ax.set_ylabel("Occurrence Percentage (%)")
-    ax.set_title(r"Histogram of Iterations Required for SIM at Various $E_b/N_0$ (Fig. 9)")
-    ax.set_xlim(3.5, 20.5)
-    ax.set_ylim(0, 30)
+    mean_3 = dists["3.0_dB"]["mean_iters"]
+    mean_5 = dists["5.0_dB"]["mean_iters"]
+    mean_8 = dists["8.0_dB"]["mean_iters"]
+
+    ax.plot(bins, p_3db, "o-", color=CLR_ACCENT, label=f"Eb/N0 = 3.0 dB (Mean: {mean_3:.1f} iters)", lw=2.2, zorder=3)
+    ax.plot(bins, p_5db, "s-", color=CLR_AMBER, label=f"Eb/N0 = 5.0 dB (Mean: {mean_5:.1f} iters)", lw=2.2, zorder=3)
+    ax.plot(bins, p_8db, "^-", color=CLR_PRIMARY, label=f"Eb/N0 = 8.0 dB (Mean: {mean_8:.1f} iters)", lw=2.2, zorder=4)
+
+    ax.set_xlabel("Total Detector Iterations Used (Warm-up + Outer)")
+    ax.set_ylabel("Empirical Occurrence (%)")
+    ax.set_title(r"Measured Histogram of Iterations Required for SIM at Various $E_b/N_0$ (Fig. 9)")
+    ax.set_xlim(min(bins) - 0.5, max(bins) + 0.5)
+    ax.set_ylim(0, max(max(p_3db), max(p_5db), max(p_8db)) * 1.25)
     ax.legend(frameon=True, facecolor="white", edgecolor=CLR_GRAY)
 
     fig.savefig(FIG_DIR / "fig4_iterations_hist.png", dpi=300)
@@ -215,26 +235,30 @@ def plot_fig4_iterations_hist():
     plt.close(fig)
 
 
-def plot_fig5_ber_vs_iterations():
-    """Fig. 5: BER vs Inner/Outer Iterations (Fig. 11 replication)."""
-    outer_iters = np.arange(1, 13)
-
-    ber_in2 = 0.5 * (10.0 ** (-0.28 * outer_iters))
-    ber_in4 = 0.4 * (10.0 ** (-0.38 * outer_iters))
-    ber_in8 = 0.3 * (10.0 ** (-0.48 * outer_iters))
+def plot_fig5_ber_vs_iterations(data: dict):
+    """Fig. 5: Measured BER vs Outer Iteration Budget (Fig. 11 Replication)."""
+    ber_data = data["ber_vs_iterations"]
+    outer_iters = np.array(ber_data["outer_iterations"])
+    curves = ber_data["ber_curves"]
+    snr_eval = ber_data["benchmark_snr_db"]
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8), dpi=300)
     ax.grid(True, which="both", zorder=0)
 
-    ax.semilogy(outer_iters, ber_in2, "d--", color=CLR_GRAY, label="Inner Iterations = 2", zorder=3)
-    ax.semilogy(outer_iters, ber_in4, "o-.", color=CLR_AMBER, label="Inner Iterations = 4", zorder=3)
-    ax.semilogy(outer_iters, ber_in8, "s-", color=CLR_PRIMARY, label="Inner Iterations = 8 [Paper Setup]", zorder=4)
+    # Floor at 1e-4 for log display if error is zero
+    ber_w2 = [max(b, 1e-4) for b in curves["warmup_2"]]
+    ber_w4 = [max(b, 1e-4) for b in curves["warmup_4"]]
+    ber_w8 = [max(b, 1e-4) for b in curves["warmup_8"]]
+
+    ax.semilogy(outer_iters, ber_w2, "d--", color=CLR_GRAY, label="Warm-Up / Inner = 2", zorder=3)
+    ax.semilogy(outer_iters, ber_w4, "o-.", color=CLR_AMBER, label="Warm-Up / Inner = 4", zorder=3)
+    ax.semilogy(outer_iters, ber_w8, "s-", color=CLR_PRIMARY, label="Warm-Up / Inner = 8 [Standard Setup]", zorder=4)
 
     ax.set_xlabel("Outer Iteration Count")
     ax.set_ylabel("Bit Error Rate (BER)")
-    ax.set_title(r"BER Convergence vs. Inner & Outer Iteration Budgets ($4\times 4$ 16-QAM, Fig. 11)")
+    ax.set_title(f"Measured BER Convergence vs. Outer Iterations (SNR = {snr_eval:.1f} dB, Fig. 11)")
     ax.set_xticks(outer_iters)
-    ax.set_ylim(1e-6, 1.0)
+    ax.set_ylim(1e-4, 0.5)
     ax.legend(frameon=True, facecolor="white", edgecolor=CLR_GRAY)
 
     fig.savefig(FIG_DIR / "fig5_ber_vs_iterations.png", dpi=300)
@@ -242,19 +266,12 @@ def plot_fig5_ber_vs_iterations():
     plt.close(fig)
 
 
-def plot_fig6_throughput_comparison():
-    """Fig. 6: ASIC Iterative Throughput Comparison (Table IV)."""
-    designs = [
-        "SIM 128x\n[This Work]",
-        "PPTS L=2\n[6] Cavallaro",
-        "SISO MMSE\n[8] Studer",
-        "MCMC Bit\n[14] Amiri",
-        "Stoch MCMC\n[23] Chen",
-        "Soft STS\n[26] Burg",
-    ]
-    # Iterative throughput in Mbps (Table IV)
-    thr_mbps = [787.5, 213.0, 131.0, 9.6, 375.0, 50.0]
-    colors = [CLR_PRIMARY, CLR_GRAY, CLR_GRAY, CLR_GRAY, CLR_AMBER, CLR_GRAY]
+def plot_fig6_throughput_comparison(data: dict):
+    """Fig. 6: ASIC Iterative Throughput Comparison Across Literature (Table IV)."""
+    designs = data["table4_throughput_comparison"]["designs"]
+    names = [f"{d['name']}\n{d['paper_ref']}" for d in designs]
+    thr_mbps = [d["thr_mbps"] for d in designs]
+    colors = [CLR_PRIMARY if d["highlight"] else CLR_GRAY for d in designs]
 
     fig, ax = plt.subplots(figsize=(8.5, 4.8), dpi=300)
     ax.grid(True, axis="y", zorder=0)
@@ -273,9 +290,9 @@ def plot_fig6_throughput_comparison():
     )
 
     ax.set_ylabel("Iterative Throughput (Mbps)")
-    ax.set_title("Iterative Throughput Comparison Across SOTA 4x4 MIMO Detectors (Table IV)")
+    ax.set_title("Published ASIC Throughput Comparison Across SOTA 4x4 MIMO Detectors (Table IV)")
     ax.set_xticks(range(len(designs)))
-    ax.set_xticklabels(designs, fontsize=9.5)
+    ax.set_xticklabels(names, fontsize=9.0)
     ax.set_ylim(0, 950)
 
     for b in bars:
@@ -292,7 +309,6 @@ def plot_fig7_jdd_timing_comparison():
     """Fig. 7: Timing Pipeline Comparison: Serial vs Layered vs Joint Detection/Decoding (Fig. 3)."""
     fig, ax = plt.subplots(figsize=(9.0, 4.5), dpi=300)
 
-    # Stages for Serial, Layered, and Proposed JDD
     schemes = ["(a) Serial Receiver", "(b) Layered Receiver", "(c) Proposed JDD (SIM)"]
     y_pos = [2.2, 1.2, 0.2]
 
@@ -317,7 +333,7 @@ def plot_fig7_jdd_timing_comparison():
     ax.set_yticks(y_pos)
     ax.set_yticklabels(schemes, fontweight="bold")
     ax.set_xlabel("Relative Processing Time Cycles")
-    ax.set_title("Timeline Comparison of Considered Iterative MIMO Receiver Architectures (Fig. 3)")
+    ax.set_title("Timeline Comparison of Iterative MIMO Receiver Architectures (Fig. 3 Architectural Model)")
     ax.set_xlim(-0.5, 17)
     ax.legend(frameon=True, facecolor="white", edgecolor=CLR_GRAY, loc="upper right")
 
@@ -327,21 +343,24 @@ def plot_fig7_jdd_timing_comparison():
 
 
 def main():
-    print("Generating Figure 1: Stochastic Multiplier SNR Comparison...")
-    plot_fig1_mul_snr()
-    print("Generating Figure 2: Coded MIMO FER Performance...")
-    plot_fig2_fer_performance()
-    print("Generating Figure 3: FreePDK45 ASIC Synthesis Breakdown...")
+    print("Loading measured simulation campaign data...")
+    data = load_campaign_data()
+
+    print("Generating Figure 1: Stochastic Multiplier SNR Comparison (Table II)...")
+    plot_fig1_mul_snr(data)
+    print("Generating Figure 2: 4x4 MIMO Detection FER Performance (Fig. 10)...")
+    plot_fig2_fer_performance(data)
+    print("Generating Figure 3: FreePDK45 ASIC Synthesis Breakdown (Table III)...")
     plot_fig3_synth_breakdown()
-    print("Generating Figure 4: Iterations Histogram...")
-    plot_fig4_iterations_hist()
-    print("Generating Figure 5: BER vs Inner & Outer Iterations...")
-    plot_fig5_ber_vs_iterations()
-    print("Generating Figure 6: Iterative Throughput Comparison...")
-    plot_fig6_throughput_comparison()
-    print("Generating Figure 7: JDD Timing Architecture...")
+    print("Generating Figure 4: Measured SIM Iterations Histogram (Fig. 9)...")
+    plot_fig4_iterations_hist(data)
+    print("Generating Figure 5: Measured BER Convergence vs. Outer Iterations (Fig. 11)...")
+    plot_fig5_ber_vs_iterations(data)
+    print("Generating Figure 6: Published ASIC Throughput Comparison (Table IV)...")
+    plot_fig6_throughput_comparison(data)
+    print("Generating Figure 7: JDD Architectural Pipeline Timing (Fig. 3)...")
     plot_fig7_jdd_timing_comparison()
-    print("All 7 figures generated successfully in docs/figures/!")
+    print("All 7 figures generated successfully from genuine simulation and synthesis artifacts!")
 
 
 if __name__ == "__main__":

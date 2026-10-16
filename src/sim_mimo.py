@@ -121,6 +121,8 @@ def sim_mimo_detect(
     decoder: Callable[[np.ndarray], np.ndarray] | None = None,
     init_bits: np.ndarray | None = None,
     seed: int = 0,
+    confidence_thresh: float = 6.0,
+    early_stop_stability: int = 2,
 ) -> dict[str, np.ndarray | int]:
     """Full Stochastic Iterative MIMO (SIM) detector algorithm (Sec. III).
     
@@ -175,10 +177,17 @@ def sim_mimo_detect(
 
     # 2. GsUD Outer Iterations (Eqs. 10-14)
     iterations_used = n_warmup
+    prev_bits = current_bits.copy()
+    stable_count = 0
     for it in range(n_outer):
         iterations_used += 1
         # Channel decoder updates hard bits (Eq. 10)
         decoded_bits = decoder(llr_ext)
+        if np.array_equal(decoded_bits, prev_bits):
+            stable_count += 1
+        else:
+            stable_count = 0
+        prev_bits = decoded_bits.copy()
         current_bits = decoded_bits.copy()
 
         # Update QAM symbols (Eq. 11)
@@ -188,7 +197,9 @@ def sim_mimo_detect(
         # Recompute extrinsic LLR for next loop (Eqs. 12-13)
         llr_ext = maxlog_llr_qam(y_real, H_real, s_real, current_bits, noise_var, mod_order)
 
-        # Early termination check if all LLRs have high confidence
+        # Early termination checks
+        if early_stop_stability > 0 and stable_count >= early_stop_stability and np.mean(np.abs(llr_ext)) >= confidence_thresh:
+            break
         if np.all(np.abs(llr_ext) > 15.0):
             break
 
